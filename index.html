@@ -1192,6 +1192,11 @@ function initApp(filename, count) {
   document.getElementById('file-info').textContent = `${filename} · ${count} MATCHES`;
   document.getElementById('reload-btn').style.display = '';
 
+  // Show sync button if logged into Supabase
+  if (currentUser) {
+    document.getElementById('sync-btn').style.display = '';
+  }
+
   populateSelects();
   populateHmMatchSelect(PLAYERS.find(p=>p.id)?.id || PLAYERS[0]?.name);
   populateDaMatchSelect(PLAYERS.find(p=>p.id)?.id || PLAYERS[0]?.name);
@@ -3690,16 +3695,6 @@ async function initAuth() {
   } else {
     document.getElementById('auth-zone').style.display = '';
     document.getElementById('upload-zone').style.display = 'none';
-  }
-}
-
-// ── Override initApp to show sync button ──────────────────────────────
-const _origInitApp = initApp;
-function initApp(filename, count) {
-  _origInitApp(filename, count);
-  if (currentUser) {
-    document.getElementById('sync-btn').style.display = '';
-    document.getElementById('reload-btn').style.display = '';
   }
 }
 

@@ -648,8 +648,8 @@
 <header>
   <div class="logo">🎯 AUTO<span>DARTS</span></div>
   <div class="header-right">
-    <span id="file-info" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);"></span>
-    <span id="user-info" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);display:none;"></span>
+    <span id="file-info" style="font-family:var(--font-mono);font-size:13px;color:var(--muted);"></span>
+    <span id="user-info" style="font-family:var(--font-mono);font-size:13px;color:var(--muted);display:none;"></span>
     <button class="btn btn-dim" id="reload-btn" style="display:none;" onclick="resetApp()">↺ NEU LADEN</button>
     <button class="btn btn-dim" id="sync-btn" style="display:none;" onclick="syncFromSupabase()">☁ SYNC</button>
     <button class="btn btn-dim" id="logout-btn" style="display:none;" onclick="authLogout()">ABMELDEN</button>
@@ -667,12 +667,12 @@
     <div class="modal-body">
       <div class="modal-left" id="modal-left"></div>
       <div class="modal-right" id="modal-right">
-        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px;">HEATMAP</div>
+        <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:12px;">HEATMAP</div>
         <div style="position:relative;">
           <canvas id="modal-heatmap" width="340" height="340" style="border-radius:50%;display:block;margin:0 auto;"></canvas>
           <canvas id="modal-darts"   width="340" height="340" style="position:absolute;top:0;left:50%;transform:translateX(-50%);border-radius:50%;"></canvas>
         </div>
-        <div id="modal-hm-legend" style="margin-top:12px;font-size:10px;font-family:var(--font-mono);"></div>
+        <div id="modal-hm-legend" style="margin-top:12px;font-size:12px;font-family:var(--font-mono);"></div>
         <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;" id="modal-hm-controls"></div>
       </div>
     </div>
@@ -709,15 +709,15 @@
       <div style="display:flex;flex-direction:column;gap:6px;">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
           <input type="radio" name="font" value="orbitron" onchange="setFont(this.value)" checked>
-          <span style="font-family:'Orbitron',monospace;font-size:12px;color:var(--text);">ORBITRON</span>
+          <span style="font-family:'Orbitron',monospace;font-size:14px;color:var(--text);">ORBITRON</span>
         </label>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
           <input type="radio" name="font" value="mono" onchange="setFont(this.value)">
-          <span style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text);">Share Tech Mono</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--text);">Share Tech Mono</span>
         </label>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
           <input type="radio" name="font" value="system" onchange="setFont(this.value)">
-          <span style="font-family:system-ui,sans-serif;font-size:12px;color:var(--text);">System UI</span>
+          <span style="font-family:system-ui,sans-serif;font-size:14px;color:var(--text);">System UI</span>
         </label>
       </div>
     </div>
@@ -725,7 +725,7 @@
     <!-- SCANLINES -->
     <div class="settings-section">
       <div class="settings-section-title">Effekte</div>
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:var(--text);">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-family:var(--font-mono);font-size:13px;color:var(--text);">
         <input type="checkbox" id="scanlines-toggle" checked onchange="toggleScanlines(this.checked)">
         Scanlines
       </label>
@@ -739,17 +739,17 @@
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 70px);padding:40px;">
     <div style="background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:40px;width:100%;max-width:400px;">
       <div style="font-family:var(--font-head);font-size:16px;letter-spacing:3px;color:var(--accent);margin-bottom:8px;">ANMELDEN</div>
-      <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:24px;">Autodarts Dashboard</div>
+      <div style="font-family:var(--font-mono);font-size:14px;color:var(--muted);margin-bottom:24px;">Autodarts Dashboard</div>
 
-      <div id="auth-error" style="display:none;background:rgba(255,51,85,0.1);border:1px solid var(--red);color:var(--red);padding:10px 14px;border-radius:4px;font-family:var(--font-mono);font-size:12px;margin-bottom:16px;"></div>
+      <div id="auth-error" style="display:none;background:rgba(255,51,85,0.1);border:1px solid var(--red);color:var(--red);padding:10px 14px;border-radius:4px;font-family:var(--font-mono);font-size:14px;margin-bottom:16px;"></div>
 
       <div style="margin-bottom:14px;">
-        <label style="display:block;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">E-MAIL</label>
+        <label style="display:block;font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">E-MAIL</label>
         <input type="email" id="auth-email" placeholder="deine@email.de"
           style="width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-mono);font-size:14px;padding:10px 12px;border-radius:4px;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:24px;">
-        <label style="display:block;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">PASSWORT</label>
+        <label style="display:block;font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">PASSWORT</label>
         <input type="password" id="auth-password" placeholder="••••••••"
           style="width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-mono);font-size:14px;padding:10px 12px;border-radius:4px;outline:none;box-sizing:border-box;">
       </div>
@@ -757,7 +757,7 @@
         <button onclick="authLogin()" class="btn btn-accent" style="flex:1;justify-content:center;">ANMELDEN</button>
         <button onclick="authRegister()" class="btn btn-dim" style="flex:1;justify-content:center;">REGISTRIEREN</button>
       </div>
-      <div id="auth-info" style="margin-top:14px;font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:center;"></div>
+      <div id="auth-info" style="margin-top:14px;font-family:var(--font-mono);font-size:13px;color:var(--muted);text-align:center;"></div>
     </div>
   </div>
 </div>
@@ -770,7 +770,7 @@
     <div style="background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:32px 40px;width:100%;max-width:560px;text-align:center;">
       <span style="font-size:48px;display:block;margin-bottom:16px;filter:drop-shadow(0 0 12px var(--accent));">☁️</span>
       <div style="font-family:var(--font-head);font-size:16px;letter-spacing:3px;color:var(--accent);margin-bottom:8px;">AUS CLOUD LADEN</div>
-      <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:20px;">Deine gespeicherten Matches aus Supabase</div>
+      <div style="font-family:var(--font-mono);font-size:14px;color:var(--muted);margin-bottom:20px;">Deine gespeicherten Matches aus Supabase</div>
       <button onclick="loadFromSupabase()" class="btn btn-accent" style="margin:0 auto;">MATCHES LADEN</button>
     </div>
 
@@ -931,15 +931,15 @@
       <label>SPIELER</label>
       <select id="cmp-player"></select>
       <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent);">A</span>
+        <span style="font-family:var(--font-mono);font-size:14px;color:var(--accent);">A</span>
         <input type="date" id="cmp-a-from">
-        <span style="color:var(--muted);font-size:11px;">–</span>
+        <span style="color:var(--muted);font-size:13px;">–</span>
         <input type="date" id="cmp-a-to">
       </div>
       <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2);">B</span>
+        <span style="font-family:var(--font-mono);font-size:14px;color:var(--accent2);">B</span>
         <input type="date" id="cmp-b-from">
-        <span style="color:var(--muted);font-size:11px;">–</span>
+        <span style="color:var(--muted);font-size:13px;">–</span>
         <input type="date" id="cmp-b-to">
       </div>
       <button class="btn btn-accent" onclick="renderCompareTab()">VERGLEICHEN</button>
@@ -986,7 +986,7 @@
       </select>
       <button class="btn btn-dim" onclick="renderHeatmapTab()">ANZEIGEN</button>
     </div>
-    <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-bottom:12px;">
+    <div style="font-size:13px;color:var(--muted);font-family:var(--font-mono);margin-bottom:12px;">
       Scrollen = Zoom · Ziehen = Pan · Doppelklick = Reset
     </div>
     <div class="heatmap-wrap">
@@ -1515,7 +1515,7 @@ function renderMatchesTab() {
       <td>${s.first9Avg.toFixed(1)}</td>
       <td>${s.checkoutPct.toFixed(1)}%</td>
       <td style="color:${effDblColor(s.effDoublePct)}">
-        ${s.effDoublePct.toFixed(1)}% <span style="color:var(--muted);font-size:10px;">${s.effDoubleHits}/${s.effDoubleAttempts}</span>
+        ${s.effDoublePct.toFixed(1)}% <span style="color:var(--muted);font-size:14px;">${s.effDoubleHits}/${s.effDoubleAttempts}</span>
       </td>
       <td>${s.turnsWith180}</td>
       <td>${s.turnsWith140plus}</td>
@@ -2084,7 +2084,7 @@ function renderHeatmapLegend(hits) {
   const sorted = Object.entries(hits).sort((a,b)=>b[1]-a[1]).slice(0,15);
   const max = sorted[0]?.[1]||1;
   legend.innerHTML =
-    `<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:12px;">TOP SEGMENTE</div>` +
+    `<div style="font-family:var(--font-mono);font-size:13px;color:var(--muted);letter-spacing:2px;margin-bottom:12px;">TOP SEGMENTE</div>` +
     sorted.map(([seg,cnt])=>`
       <div class="legend-row">
         <span class="legend-seg">${seg}</span>
@@ -2154,7 +2154,7 @@ function renderLegsTab() {
       const cls    = pts===180?'ton80':pts>=100?'high':'';
       const bust   = turn.busted ? ' turn-bust' : '';
       return `<div class="turn-row${bust?` turn-bust`:''}">
-        <span style="color:var(--muted);font-size:10px;">R${turn.round} · ${pidToName[turn.playerId]||'?'}</span>
+        <span style="color:var(--muted);font-size:14px;">R${turn.round} · ${pidToName[turn.playerId]||'?'}</span>
         <span class="turn-throws">${throws||'—'}</span>
         <span class="turn-pts ${cls}">${turn.busted?'BUST':pts}</span>
         <span class="turn-rem">${turn.score??'—'}</span>
@@ -2166,7 +2166,7 @@ function renderLegsTab() {
         <span>LEG ${gi+1} · Set ${game.set} Leg ${game.leg}</span>
         <span class="leg-winner">🏆 ${winName}</span>
       </div>
-      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);
+      <div style="font-family:var(--font-mono);font-size:14px;color:var(--muted);
                   display:grid;grid-template-columns:1fr auto auto auto;gap:4px;
                   padding-bottom:4px;margin-bottom:4px;border-bottom:1px solid var(--border);">
         <span>RUNDE · SPIELER</span><span>WÜRFE</span><span>PTS</span><span>REST</span>
@@ -2194,7 +2194,7 @@ function renderCheckoutsTab() {
     <div class="checkout-card">
       <div>
         <div class="checkout-route">${route}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${route.split('-').length} DARTS</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;">${route.split('-').length} DARTS</div>
       </div>
       <div class="checkout-count">${cnt}×</div>
     </div>`).join('');
@@ -2205,7 +2205,7 @@ function renderCheckoutsTab() {
       <td style="color:var(--yellow);">${c.route}</td>
       <td>${c.score}</td>
       <td>${c.darts}</td>
-      <td style="color:var(--muted);font-size:11px;">${c.matchId?.slice(0,8)||'—'}…</td>
+      <td style="color:var(--muted);font-size:13px;">${c.matchId?.slice(0,8)||'—'}…</td>
       <td>${c.date}</td>
     </tr>`).join('');
 }
@@ -2341,26 +2341,26 @@ function renderTrainingTab() {
               <div class="phase-label">${b.label}  ·  ${b.matches} MATCHES</div>
               <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
                 <span class="phase-avg">${b.avg.toFixed(1)}</span>
-                ${prev?`<span class="phase-delta ${dCls}">${dAvg>0?'+':''}${dAvg.toFixed(1)}</span>`:'<span style="font-size:11px;color:var(--muted);">baseline</span>'}
+                ${prev?`<span class="phase-delta ${dCls}">${dAvg>0?'+':''}${dAvg.toFixed(1)}</span>`:'<span style="font-size:13px;color:var(--muted);">baseline</span>'}
               </div>
             </div>
-            <div style="text-align:right;font-family:var(--font-mono);font-size:12px;">
+            <div style="text-align:right;font-family:var(--font-mono);font-size:14px;">
               <div style="color:var(--green);">${b.wins}W</div>
               <div style="color:var(--red);">${b.losses}L</div>
-              <div style="color:var(--muted);font-size:10px;">${winPct}%</div>
+              <div style="color:var(--muted);font-size:14px;">${winPct}%</div>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:80px 1fr 60px;align-items:center;gap:8px;margin-top:6px;font-size:11px;">
+          <div style="display:grid;grid-template-columns:80px 1fr 60px;align-items:center;gap:8px;margin-top:6px;font-size:13px;">
             <span style="color:var(--muted);font-family:var(--font-mono);">FIRST-9</span>
             <div class="progress-bar-wrap"><div class="progress-bar" style="width:${Math.min(100,b.f9/180*100).toFixed(0)}%;background:var(--mauve);"></div></div>
             <span style="font-family:var(--font-mono);color:var(--mauve);">${b.f9.toFixed(1)}</span>
           </div>
-          <div style="display:grid;grid-template-columns:80px 1fr 60px;align-items:center;gap:8px;margin-top:4px;font-size:11px;">
+          <div style="display:grid;grid-template-columns:80px 1fr 60px;align-items:center;gap:8px;margin-top:4px;font-size:13px;">
             <span style="color:var(--muted);font-family:var(--font-mono);">CHECKOUT%</span>
             <div class="progress-bar-wrap"><div class="progress-bar" style="width:${Math.min(100,b.co).toFixed(0)}%;background:var(--yellow);"></div></div>
             <span style="font-family:var(--font-mono);color:var(--yellow);">${b.co.toFixed(1)}%</span>
           </div>
-          <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;font-family:var(--font-mono);color:var(--muted);">
+          <div style="display:flex;gap:16px;margin-top:8px;font-size:13px;font-family:var(--font-mono);color:var(--muted);">
             <span>180s: <span style="color:var(--accent2);">${b.t180s}</span></span>
             <span>Busts: <span style="color:var(--red);">${b.busts}</span></span>
           </div>
@@ -2723,7 +2723,7 @@ function renderModalLeft(match) {
         <div class="leg-bar-wrap">
           <div class="leg-bar" style="width:${(darts0/maxD*100).toFixed(0)}%;background:${won0?'var(--green)':'var(--border2)'};margin-left:auto;"></div>
         </div>
-        <span style="color:var(--muted);font-size:10px;text-align:center;">L${g.leg+1}</span>
+        <span style="color:var(--muted);font-size:14px;text-align:center;">L${g.leg+1}</span>
         <div class="leg-bar-wrap">
           <div class="leg-bar" style="width:${(darts1/maxD*100).toFixed(0)}%;background:${won1?'var(--green)':'var(--border2)'};"></div>
         </div>
@@ -2740,7 +2740,7 @@ function renderModalLeft(match) {
     <div class="player-cols">${playerCols}</div>
 
     <div class="section-head">MATCH-INFO</div>
-    <div style="display:flex;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;margin-bottom:20px;">
+    <div style="display:flex;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:14px;margin-bottom:20px;">
       <span><span style="color:var(--muted);">MODUS</span> ${settings.baseScore||501} · ${settings.inMode||'Straight'} out ${settings.outMode||'Double'}</span>
       <span><span style="color:var(--muted);">BULL</span> ${settings.bullMode||'25/50'}</span>
       <span><span style="color:var(--muted);">LEGS</span> Best of ${match.targetLegs||'?'}</span>
@@ -2757,8 +2757,8 @@ function renderModalLeft(match) {
 
     <div class="section-head">SCORE-VERLAUF</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-      <label style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">LEG</label>
-      <select id="modal-leg-sel" onchange="renderModalScoreChart()" style="background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:4px 8px;border-radius:3px;">${legSel}</select>
+      <label style="font-family:var(--font-mono);font-size:13px;color:var(--muted);">LEG</label>
+      <select id="modal-leg-sel" onchange="renderModalScoreChart()" style="background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-mono);font-size:13px;padding:4px 8px;border-radius:3px;">${legSel}</select>
     </div>
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:12px;">
       <canvas id="modal-score-canvas" height="160" style="width:100%;display:block;"></canvas>
@@ -2768,7 +2768,7 @@ function renderModalLeft(match) {
     <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
       ${pStats.map((ps,i)=>`
         <button onclick="renderModalTurns(${i})" id="modal-turn-btn-${i}"
-          style="padding:5px 14px;border-radius:3px;cursor:pointer;font-family:var(--font-mono);font-size:11px;
+          style="padding:5px 14px;border-radius:3px;cursor:pointer;font-family:var(--font-mono);font-size:13px;
                  border:1px solid ${i===0?'var(--accent)':'var(--border2)'};
                  color:${i===0?'var(--accent)':'var(--muted)'};background:none;">
           ${ps.name}
@@ -2938,7 +2938,7 @@ function renderModalHmControls(match) {
   const modes = [['dots','Punkte'],['heat','Heatmap'],['both','Beides']];
   wrap.innerHTML = modes.map(([v,l])=>`
     <button onclick="renderModalHeatmap(window._modalMatch,'${v}')"
-      style="padding:4px 10px;border-radius:3px;cursor:pointer;font-family:var(--font-mono);font-size:10px;
+      style="padding:4px 10px;border-radius:3px;cursor:pointer;font-family:var(--font-mono);font-size:14px;
              border:1px solid ${v===modalHmMode?'var(--accent)':'var(--border2)'};
              color:${v===modalHmMode?'var(--accent)':'var(--muted)'};background:none;">
       ${l}</button>`).join('');
@@ -3151,13 +3151,28 @@ function renderDartCard(throws, dartNum) {
       <div class="dart-pos-label">DART ${dartNum}</div>
       <div class="dart-pos-avg">${s.count ? s.avg.toFixed(2) : '—'}</div>
       <div class="dart-pos-sub">${s.count} Würfe · Max ${s.count ? Math.max(...throws.map(t=>t.pts)) : 0}</div>
-      <div class="dart-breakdown">
-        <span style="color:var(--muted);">Singles</span>  <span>${s.singles}</span>
-        <span style="color:var(--yellow);">Doubles</span> <span>${s.doubles}</span>
-        <span style="color:var(--accent);">Triples</span> <span>${s.triples}</span>
-        <span style="color:var(--green);">Bulls</span>    <span>${s.bulls}</span>
-        <span style="color:var(--red);">Misses</span>    <span>${s.misses}</span>
-      </div>
+      <table style="width:100%;margin-top:10px;border-collapse:collapse;font-family:var(--font-mono);font-size:14px;">
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:5px 0;color:var(--muted);">Singles</td>
+          <td style="padding:5px 0;text-align:right;font-weight:bold;">${s.singles}</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:5px 0;color:var(--yellow);">Doubles</td>
+          <td style="padding:5px 0;text-align:right;font-weight:bold;color:var(--yellow);">${s.doubles}</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:5px 0;color:var(--accent);">Triples</td>
+          <td style="padding:5px 0;text-align:right;font-weight:bold;color:var(--accent);">${s.triples}</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:5px 0;color:var(--green);">Bulls</td>
+          <td style="padding:5px 0;text-align:right;font-weight:bold;color:var(--green);">${s.bulls}</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 0;color:var(--red);">Misses</td>
+          <td style="padding:5px 0;text-align:right;font-weight:bold;color:var(--red);">${s.misses}</td>
+        </tr>
+      </table>
     </div>`;
 }
 
@@ -3209,10 +3224,10 @@ function renderDartsTab() {
       <div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:24px;">
         ${avgs.map((avg,i) => `
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-            <span style="font-family:var(--font-head);font-size:12px;letter-spacing:1px;color:${colors[i]};width:56px;">DART ${i+1}</span>
+            <span style="font-family:var(--font-head);font-size:14px;letter-spacing:1px;color:${colors[i]};width:56px;">DART ${i+1}</span>
             <div style="flex:1;height:26px;background:var(--border);border-radius:3px;overflow:hidden;">
               <div style="height:100%;width:${(avg/maxAvg*100).toFixed(1)}%;background:${colors[i]};border-radius:3px;display:flex;align-items:center;padding-left:8px;">
-                <span style="font-family:var(--font-mono);font-size:12px;color:var(--bg);font-weight:bold;">${avg.toFixed(2)}</span>
+                <span style="font-family:var(--font-mono);font-size:14px;color:var(--bg);font-weight:bold;">${avg.toFixed(2)}</span>
               </div>
             </div>
           </div>`).join('')}
@@ -3223,7 +3238,7 @@ function renderDartsTab() {
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;">
         ${[0,1,2].map(i => `
           <div>
-            <div style="font-family:var(--font-head);font-size:11px;letter-spacing:2px;color:${colors[i]};margin-bottom:8px;">DART ${i+1}</div>
+            <div style="font-family:var(--font-head);font-size:13px;letter-spacing:2px;color:${colors[i]};margin-bottom:8px;">DART ${i+1}</div>
             ${renderDartSegBars(groups, i, colorHex[i])}
           </div>`).join('')}
       </div>`;
@@ -3234,7 +3249,7 @@ function renderDartsTab() {
       const avgs = g.d.map(d => d.length ? d.reduce((a,t)=>a+t.pts,0)/d.length : 0);
       const wonBadge = g.won !== undefined
         ? (g.won ? '<span class="win-badge" style="margin-left:8px;">SIEG</span>' : '<span class="loss-badge" style="margin-left:8px;">NIEDERLAGE</span>')
-        : (g.wins !== undefined ? `<span style="color:var(--muted);font-size:11px;margin-left:8px;">${g.wins}/${g.legs} Legs gewonnen</span>` : '');
+        : (g.wins !== undefined ? `<span style="color:var(--muted);font-size:13px;margin-left:8px;">${g.wins}/${g.legs} Legs gewonnen</span>` : '');
 
       html += `<div class="da-group-head">${g.label} ${wonBadge}</div>
         <div class="dart-pos-grid" style="margin-bottom:20px;">
@@ -3246,10 +3261,10 @@ function renderDartsTab() {
       html += `<div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:20px;">
         ${avgs.map((avg,i) => `
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-            <span style="font-family:var(--font-mono);font-size:11px;color:${colors[i]};width:50px;">Dart ${i+1}</span>
+            <span style="font-family:var(--font-mono);font-size:13px;color:${colors[i]};width:50px;">Dart ${i+1}</span>
             <div style="flex:1;height:18px;background:var(--border);border-radius:3px;overflow:hidden;">
               <div style="height:100%;width:${(avg/maxAvg*100).toFixed(1)}%;background:${colors[i]};border-radius:3px;display:flex;align-items:center;padding-left:6px;">
-                <span style="font-family:var(--font-mono);font-size:10px;color:var(--bg);font-weight:bold;">${avg.toFixed(2)}</span>
+                <span style="font-family:var(--font-mono);font-size:14px;color:var(--bg);font-weight:bold;">${avg.toFixed(2)}</span>
               </div>
             </div>
           </div>`).join('')}
@@ -3274,7 +3289,7 @@ function renderDartsTab() {
                 const avgs = g.d.map(d => d.length ? d.reduce((a,t)=>a+t.pts,0)/d.length : 0);
                 const total = avgs.filter(v=>v>0).reduce((a,b)=>a+b,0) / (avgs.filter(v=>v>0).length||1);
                 return `<tr>
-                  <td style="font-family:var(--font-mono);font-size:12px;">${g.label}</td>
+                  <td style="font-family:var(--font-mono);font-size:14px;">${g.label}</td>
                   <td style="color:var(--accent);font-weight:bold;">${avgs[0].toFixed(2)}</td>
                   <td style="color:var(--mauve);font-weight:bold;">${avgs[1].toFixed(2)}</td>
                   <td style="color:var(--accent2);font-weight:bold;">${avgs[2].toFixed(2)}</td>
@@ -3353,7 +3368,7 @@ function renderOpponentsTab() {
             return `<tr>
               <td><strong>${o.name}</strong></td>
               <td>${o.matches}</td>
-              <td style="color:${winRate>=50?'var(--green)':'var(--red)'};font-weight:bold;">${winRate.toFixed(0)}% <span style="color:var(--muted);font-size:11px;">(${o.wins}W/${o.matches-o.wins}L)</span></td>
+              <td style="color:${winRate>=50?'var(--green)':'var(--red)'};font-weight:bold;">${winRate.toFixed(0)}% <span style="color:var(--muted);font-size:13px;">(${o.wins}W/${o.matches-o.wins}L)</span></td>
               <td style="color:${avgColor(avg)}">${avg.toFixed(2)}</td>
               <td>${f9.toFixed(1)}</td>
               <td>${co.toFixed(1)}%</td>
@@ -3444,9 +3459,9 @@ function renderCompareTab() {
 
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-top:8px;">
-      <div style="padding:14px 16px;background:var(--bg2);font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:1px;border-bottom:2px solid var(--border);">METRIK</div>
-      <div style="padding:14px 16px;background:var(--bg2);font-family:var(--font-head);font-size:13px;color:var(--accent);letter-spacing:2px;border-bottom:2px solid var(--border);">A · ${labelA}</div>
-      <div style="padding:14px 16px;background:var(--bg2);font-family:var(--font-head);font-size:13px;color:var(--accent2);letter-spacing:2px;border-bottom:2px solid var(--border);">B · ${labelB}</div>
+      <div style="padding:14px 16px;background:var(--bg2);font-family:var(--font-mono);font-size:13px;color:var(--muted);letter-spacing:1px;border-bottom:2px solid var(--border);">METRIK</div>
+      <div style="padding:14px 16px;background:var(--bg2);font-family:var(--font-head);font-size:15px;color:var(--accent);letter-spacing:2px;border-bottom:2px solid var(--border);">A · ${labelA}</div>
+      <div style="padding:14px 16px;background:var(--bg2);font-family:var(--font-head);font-size:15px;color:var(--accent2);letter-spacing:2px;border-bottom:2px solid var(--border);">B · ${labelB}</div>
       ${rows.map(r => {
         const va = A?.[r.ka], vb = B?.[r.ka];
         const aStr = va != null ? r.fmt(va) : '—';
@@ -3454,7 +3469,7 @@ function renderCompareTab() {
         const aBetter = va != null && vb != null && (r.higher ? va > vb : va < vb);
         const bBetter = va != null && vb != null && (r.higher ? vb > va : vb < va);
         return `
-          <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:12px;color:var(--muted);">${r.label}</div>
+          <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:14px;color:var(--muted);">${r.label}</div>
           <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:14px;font-weight:bold;color:${aBetter?'var(--green)':va!=null&&bBetter?'var(--red)':'var(--text)'};">
             ${aStr} ${arrow(va, vb, r.higher)}
           </div>

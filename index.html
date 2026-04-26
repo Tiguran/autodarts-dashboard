@@ -381,6 +381,54 @@
   .double-card-pct  { font-family:var(--font-head); font-size:22px; margin-bottom:2px; }
   .double-card-sub  { font-size:10px; color:var(--muted); font-family:var(--font-mono); }
 
+  /* ── STREAK ── */
+  .streak-card {
+    background:var(--bg1); border:1px solid var(--border); border-radius:6px;
+    padding:16px 20px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+  }
+  .streak-current {
+    font-family:var(--font-head); font-size:28px; font-weight:700;
+  }
+  .streak-label { font-family:var(--font-mono); font-size:11px; color:var(--muted); margin-top:2px; }
+  .wl-bar { display:flex; gap:3px; align-items:center; flex-wrap:wrap; }
+  .wl-dot {
+    width:18px; height:18px; border-radius:3px; display:flex; align-items:center;
+    justify-content:center; font-size:10px; font-weight:bold; font-family:var(--font-mono);
+  }
+  .wl-dot.w { background:rgba(0,255,136,0.2); color:var(--green); border:1px solid var(--green); }
+  .wl-dot.l { background:rgba(255,51,85,0.2);  color:var(--red);   border:1px solid var(--red); }
+
+  /* ── PERSONAL BESTS ── */
+  .bests-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+  .best-card {
+    background:var(--bg1); border:1px solid var(--border); border-radius:4px;
+    padding:12px 14px; border-top:2px solid var(--accent);
+  }
+  .best-card-label { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--muted); margin-bottom:6px; }
+  .best-card-value { font-family:var(--font-head); font-size:24px; color:var(--accent); }
+  .best-card-date  { font-size:10px; color:var(--muted); margin-top:3px; font-family:var(--font-mono); }
+
+  /* ── OPPONENTS ── */
+  .opp-table td, .opp-table th { padding:10px 14px; }
+
+  /* ── COMPARE ── */
+  .compare-grid { display:grid; grid-template-columns:2fr 1fr 1fr; gap:0; margin-bottom:20px; }
+  .compare-header {
+    font-family:var(--font-head); font-size:13px; letter-spacing:2px;
+    padding:12px 16px; border-bottom:2px solid var(--border);
+  }
+  .compare-row { display:contents; }
+  .compare-row > div {
+    padding:10px 16px; border-bottom:1px solid var(--border);
+    font-family:var(--font-mono); font-size:13px;
+    display:flex; align-items:center;
+  }
+  .compare-row > div:first-child { color:var(--muted); font-size:12px; }
+  .compare-better { color:var(--green); }
+  .compare-worse  { color:var(--red); }
+  .compare-equal  { color:var(--muted); }
+  .compare-arrow  { margin-left:6px; font-size:11px; }
+
   /* ── SORTABLE TABLE ── */
   th.sortable { cursor:pointer; user-select:none; white-space:nowrap; }
   th.sortable:hover { color:var(--accent); }
@@ -725,6 +773,8 @@
     <button data-tab="checkouts">CHECKOUTS</button>
     <button data-tab="training">📈 TRAINING</button>
     <button data-tab="rounds">🔄 RUNDEN</button>
+    <button data-tab="opponents">👥 GEGNER</button>
+    <button data-tab="compare">⚖ VERGLEICH</button>
   </nav>
 
   <!-- OVERVIEW -->
@@ -734,6 +784,9 @@
       <select id="ov-player"></select>
     </div>
     <div class="kpi-grid" id="kpi-grid"></div>
+    <div id="streak-row" style="margin-bottom:24px;"></div>
+    <div class="section-head">PERSÖNLICHE BESTLEISTUNGEN</div>
+    <div id="personal-bests" style="margin-bottom:28px;"></div>
     <div class="section-head">LETZTE 10 MATCHES</div>
     <div style="overflow-x:auto;">
       <table class="data-table" id="recent-table">
@@ -748,13 +801,16 @@
 
   <!-- MATCHES -->
   <div class="tab-content" id="tab-matches">
-    <div class="filter-row">
+    <div class="filter-row" style="flex-wrap:wrap;gap:8px;">
       <label>SPIELER</label>
       <select id="mt-player"></select>
       <label>VON</label>
       <input type="date" id="mt-from">
       <label>BIS</label>
       <input type="date" id="mt-to">
+      <button class="btn btn-dim" onclick="setMtQuick(7)">7T</button>
+      <button class="btn btn-dim" onclick="setMtQuick(30)">30T</button>
+      <button class="btn btn-dim" onclick="setMtQuick(0)">ALLES</button>
       <button class="btn btn-dim" onclick="renderMatchesTab()">FILTER</button>
     </div>
     <div style="overflow-x:auto;">
@@ -831,6 +887,38 @@
       <button class="btn btn-dim" onclick="renderRoundsTab()">AKTUALISIEREN</button>
     </div>
     <div id="rd-content"><div class="no-data">Daten laden…</div></div>
+  </div>
+
+  <!-- GEGNER -->
+  <div class="tab-content" id="tab-opponents">
+    <div class="filter-row">
+      <label>SPIELER</label>
+      <select id="op-player"></select>
+      <button class="btn btn-dim" onclick="renderOpponentsTab()">AKTUALISIEREN</button>
+    </div>
+    <div id="op-content"><div class="no-data">Daten laden…</div></div>
+  </div>
+
+  <!-- PERIODEN-VERGLEICH -->
+  <div class="tab-content" id="tab-compare">
+    <div class="filter-row" style="flex-wrap:wrap;gap:12px;">
+      <label>SPIELER</label>
+      <select id="cmp-player"></select>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent);">A</span>
+        <input type="date" id="cmp-a-from">
+        <span style="color:var(--muted);font-size:11px;">–</span>
+        <input type="date" id="cmp-a-to">
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2);">B</span>
+        <input type="date" id="cmp-b-from">
+        <span style="color:var(--muted);font-size:11px;">–</span>
+        <input type="date" id="cmp-b-to">
+      </div>
+      <button class="btn btn-accent" onclick="renderCompareTab()">VERGLEICHEN</button>
+    </div>
+    <div id="cmp-content"><div class="no-data">Zeiträume wählen und VERGLEICHEN klicken.</div></div>
   </div>
   <!-- HEATMAP -->
   <div class="tab-content" id="tab-heatmap">
@@ -1182,7 +1270,7 @@ function resetApp() {
 // ═══════════════════════════════════════════════════════════════════════
 
 function populateSelects() {
-  const ids = ['ov-player','mt-player','ch-player','hm-player','co-player','tr-player','rd-player'];
+  const ids = ['ov-player','mt-player','ch-player','hm-player','co-player','tr-player','rd-player','op-player','cmp-player'];
   ids.forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
@@ -1213,57 +1301,131 @@ function renderOverviewTab() {
 
   const wins   = stats.filter(s => s.isWinner).length;
   const losses = stats.length - wins;
-  const avgAll = stats.map(s=>s.avg3Dart);
-  const avg    = avgAll.reduce((a,b)=>a+b,0)/avgAll.length;
-  const f9All  = stats.map(s=>s.first9Avg);
-  const f9     = f9All.reduce((a,b)=>a+b,0)/f9All.length;
-  const co     = stats.map(s=>s.checkoutPct);
-  const coAvg  = co.reduce((a,b)=>a+b,0)/co.length;
+  const avg    = stats.reduce((a,s)=>a+s.avg3Dart,0)/stats.length;
+  const f9     = stats.reduce((a,s)=>a+s.first9Avg,0)/stats.length;
+  const coAvg  = stats.reduce((a,s)=>a+s.checkoutPct,0)/stats.length;
   const t180   = stats.reduce((a,s)=>a+s.turnsWith180,0);
   const busts  = stats.reduce((a,s)=>a+s.bust,0);
   const best   = Math.max(...stats.map(s=>s.highestTurn));
   const winPct = (wins/stats.length*100).toFixed(0);
-
-  // Effektive Doppelquote: aggregate raw attempts/hits across all matches
   const effAtt = stats.reduce((a,s)=>a+s.effDoubleAttempts,0);
   const effHit = stats.reduce((a,s)=>a+s.effDoubleHits,0);
   const effPct = effAtt > 0 ? (effHit/effAtt*100) : 0;
 
+  // ── KPI Kacheln ─────────────────────────────────────────────────────
   const kpis = [
-    {label:'MATCHES',   value: stats.length,        color:'var(--accent)'},
-    {label:'WIN %',     value: winPct+'%',           color: winPct>=50?'var(--green)':'var(--red)'},
-    {label:'WINS',      value: wins,                 color:'var(--green)'},
-    {label:'LOSSES',    value: losses,               color:'var(--red)'},
-    {label:'AVG',       value: avg.toFixed(1),       color:'var(--accent)'},
-    {label:'FIRST-9',   value: f9.toFixed(1),        color:'var(--mauve)'},
-    {label:'CHECKOUT%', value: coAvg.toFixed(1)+'%', color:'var(--yellow)'},
-    {label:'EFF. DOPPEL', value: effPct.toFixed(1)+'%',
-      sub: `${effHit}/${effAtt} Darts`,              color:'var(--green)'},
-    {label:'180s',      value: t180,                 color:'var(--accent2)'},
-    {label:'BUSTS',     value: busts,                color:'var(--muted)'},
-    {label:'HÖCHSTE',   value: best,                 color:'var(--yellow)'},
+    {label:'MATCHES',     value: stats.length,         color:'var(--accent)'},
+    {label:'WIN %',       value: winPct+'%',            color: winPct>=50?'var(--green)':'var(--red)'},
+    {label:'WINS',        value: wins,                  color:'var(--green)'},
+    {label:'LOSSES',      value: losses,                color:'var(--red)'},
+    {label:'AVG',         value: avg.toFixed(1),        color:'var(--accent)'},
+    {label:'FIRST-9',     value: f9.toFixed(1),         color:'var(--mauve)'},
+    {label:'CHECKOUT%',   value: coAvg.toFixed(1)+'%',  color:'var(--yellow)'},
+    {label:'EFF. DOPPEL', value: effPct.toFixed(1)+'%', sub:`${effHit}/${effAtt}`, color:'var(--green)'},
+    {label:'180s',        value: t180,                  color:'var(--accent2)'},
+    {label:'BUSTS',       value: busts,                 color:'var(--muted)'},
+    {label:'HÖCHSTE',     value: best,                  color:'var(--yellow)'},
   ];
-
   document.getElementById('kpi-grid').innerHTML = kpis.map(k => `
-    <div class="kpi" style="--kpi-color:${k.color};--accent-color:${k.color}">
+    <div class="kpi" style="--kpi-color:${k.color}">
       <div class="kpi-label">${k.label}</div>
       <div class="kpi-value">${k.value}</div>
       ${k.sub ? `<div class="kpi-sub">${k.sub}</div>` : ''}
     </div>`).join('');
 
-  // Recent 10
-  const recent = [...stats].reverse().slice(0,10);
+  // ── Streak ──────────────────────────────────────────────────────────
+  const sorted = [...stats].sort((a,b) => (a.matchDate||'').localeCompare(b.matchDate||''));
+  let curStreak = 0, curType = null, bestWin = 0, bestLoss = 0, cur = 0;
+  sorted.forEach(s => {
+    if (curType === null || s.isWinner === curType) { curStreak++; }
+    else { curStreak = 1; }
+    curType = s.isWinner;
+    if (s.isWinner) { cur = cur > 0 ? cur+1 : 1; bestWin = Math.max(bestWin, cur); }
+    else { cur = cur < 0 ? cur-1 : -1; bestLoss = Math.max(bestLoss, -cur); }
+  });
+  const last10 = sorted.slice(-10);
+  const wlDots = last10.map(s =>
+    `<div class="wl-dot ${s.isWinner?'w':'l'}">${s.isWinner?'W':'L'}</div>`).join('');
+  const streakColor = curType ? 'var(--green)' : 'var(--red)';
+  const streakText  = curType ? `🔥 ${curStreak} Sieg${curStreak>1?'e':''} in Folge` : `❄ ${curStreak} Niederlage${curStreak>1?'n':''} in Folge`;
+
+  document.getElementById('streak-row').innerHTML = `
+    <div class="streak-card">
+      <div>
+        <div class="streak-current" style="color:${streakColor}">${streakText}</div>
+        <div class="streak-label">Längste Siegesserie: ${bestWin} · Längste Niederlagenserie: ${bestLoss}</div>
+      </div>
+      <div>
+        <div class="streak-label" style="margin-bottom:6px;">LETZTE ${last10.length} MATCHES</div>
+        <div class="wl-bar">${wlDots}</div>
+      </div>
+    </div>`;
+
+  // ── Persönliche Bestleistungen ───────────────────────────────────────
+  const bestAvgMatch  = stats.reduce((b,s) => s.avg3Dart > b.avg3Dart ? s : b, stats[0]);
+  const bestF9Match   = stats.reduce((b,s) => s.first9Avg > b.first9Avg ? s : b, stats[0]);
+  const bestCoMatch   = stats.reduce((b,s) => s.checkoutPct > b.checkoutPct ? s : b, stats[0]);
+  const bestEffMatch  = stats.reduce((b,s) => s.effDoublePct > b.effDoublePct ? s : b, stats[0]);
+  const best180Match  = stats.reduce((b,s) => s.turnsWith180 > b.turnsWith180 ? s : b, stats[0]);
+
+  // Bestes Leg (wenigste Darts) – aus RAW
+  let bestLegDarts = 999, bestLegDate = '';
+  RAW.forEach(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return;
+    (match.games||[]).forEach(game => {
+      if (game.winnerPlayerId !== me.id) return;
+      const darts = (game.turns||[]).filter(t=>t.playerId===me.id).reduce((a,t)=>a+(t.throws||[]).length,0);
+      if (darts > 0 && darts < bestLegDarts) { bestLegDarts = darts; bestLegDate = match.finishedAt?.slice(0,10)||''; }
+    });
+  });
+
+  // Höchster Finish
+  let bestFinish = 0, bestFinishDate = '';
+  RAW.forEach(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return;
+    (match.games||[]).forEach(game => {
+      (game.turns||[]).forEach(turn => {
+        if (turn.playerId !== me.id || turn.score !== 0 || turn.busted) return;
+        const pts = turn.score + turn.points; // = turn.points since score=0
+        if (turn.points > bestFinish) { bestFinish = turn.points; bestFinishDate = match.finishedAt?.slice(0,10)||''; }
+      });
+    });
+  });
+
+  const bests = [
+    { label:'BESTER AVG',      value: bestAvgMatch.avg3Dart.toFixed(2),     date: bestAvgMatch.matchDate?.slice(0,10),     color:'var(--accent)' },
+    { label:'BESTER FIRST-9',  value: bestF9Match.first9Avg.toFixed(1),     date: bestF9Match.matchDate?.slice(0,10),      color:'var(--mauve)' },
+    { label:'BESTER CHECKOUT', value: bestCoMatch.checkoutPct.toFixed(1)+'%',date: bestCoMatch.matchDate?.slice(0,10),     color:'var(--yellow)' },
+    { label:'BESTES DOPPEL',   value: bestEffMatch.effDoublePct.toFixed(1)+'%',date: bestEffMatch.matchDate?.slice(0,10),  color:'var(--green)' },
+    { label:'MEISTE 180s',     value: best180Match.turnsWith180,             date: best180Match.matchDate?.slice(0,10),    color:'var(--accent2)' },
+    { label:'BESTES LEG',      value: bestLegDarts < 999 ? bestLegDarts+' Darts' : '—', date: bestLegDate,               color:'var(--green)' },
+    { label:'HÖCHSTER FINISH', value: bestFinish > 0 ? bestFinish : '—',    date: bestFinishDate,                          color:'var(--yellow)' },
+    { label:'LÄNGSTER STREAK', value: bestWin + ' Siege',                   date: '',                                      color:'var(--green)' },
+  ];
+
+  document.getElementById('personal-bests').innerHTML = `
+    <div class="bests-grid">
+      ${bests.map(b => `
+        <div class="best-card" style="border-top-color:${b.color}">
+          <div class="best-card-label">${b.label}</div>
+          <div class="best-card-value" style="color:${b.color}">${b.value}</div>
+          ${b.date ? `<div class="best-card-date">${b.date}</div>` : ''}
+        </div>`).join('')}
+    </div>`;
+
+  // ── Letzte 10 Matches (anklickbar, neueste zuerst) ──────────────────
+  const recent = sorted.slice(-10).reverse();
   document.querySelector('#recent-table tbody').innerHTML = recent.map(s => `
-    <tr>
+    <tr class="mr-clickable" onclick="openMatchModal('${s.matchId}')">
       <td>${s.matchDate?.slice(0,10)||'—'}</td>
       <td>${s.opponentName||'—'}</td>
-      <td>${s.legsWon}:${s.opponentLegs}</td>
+      <td>${s.legsWon}:${s.opponentLegs} ${s.isWinner?'<span class="win-badge">S</span>':'<span class="loss-badge">N</span>'}</td>
       <td style="color:${avgColor(s.avg3Dart)}">${s.avg3Dart.toFixed(1)}</td>
       <td>${s.first9Avg.toFixed(1)}</td>
       <td>${s.checkoutPct.toFixed(1)}%</td>
-      <td style="color:${effDblColor(s.effDoublePct)}">
-        ${s.effDoublePct.toFixed(1)}%<span style="color:var(--muted);font-size:10px;"> ${s.effDoubleHits}/${s.effDoubleAttempts}</span>
-      </td>
+      <td style="color:${effDblColor(s.effDoublePct)}">${s.effDoublePct.toFixed(1)}%</td>
       <td>${s.turnsWith180}</td>
       <td>${s.bust}</td>
     </tr>`).join('');
@@ -1274,6 +1436,15 @@ document.getElementById('ov-player').addEventListener('change', renderOverviewTa
 // ═══════════════════════════════════════════════════════════════════════
 // MATCHES TAB
 // ═══════════════════════════════════════════════════════════════════════
+
+function setMtQuick(days) {
+  const to   = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - days);
+  document.getElementById('mt-to').value   = days === 0 ? '' : to.toISOString().slice(0,10);
+  document.getElementById('mt-from').value = days === 0 ? '' : from.toISOString().slice(0,10);
+  renderMatchesTab();
+}
 
 let mtSortCol = 'matchDate';
 let mtSortDir = -1; // -1 = desc, 1 = asc
@@ -2181,7 +2352,7 @@ function renderTrainingTab() {
       </div>
     </div>
 
-    <!-- MILESTONES -->
+    <!-- MEILENSTEINE -->
     <div class="section-head">MEILENSTEINE</div>
     <div id="tr-milestones">
       ${milestones.length ? milestones.map(m=>`
@@ -2194,6 +2365,12 @@ function renderTrainingTab() {
           <div class="milestone-date">${m.date}</div>
         </div>`).join('') : '<div class="no-data">Noch keine Meilensteine – weiter spielen!</div>'}
     </div>
+
+    <!-- TAGESZEIT-ANALYSE -->
+    <div class="section-head" style="margin-top:32px;">TAGESZEIT-ANALYSE (Avg pro Stunde)</div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:20px;">
+      <canvas id="tr-hourly" height="160" style="width:100%;display:block;"></canvas>
+    </div>
   `;
 
   // Draw rolling avg chart
@@ -2203,12 +2380,81 @@ function renderTrainingTab() {
       rolling.map(v=>+v.toFixed(1)),
       '#00e5ff', 'AVG'
     );
-    // Overlay raw avg as dots in a different color
     overlayDots('tr-rolling',
       sorted.map((_,i)=>i/(Math.max(sorted.length-1,1))),
       sorted.map(s=>s.avg3Dart),
       '#ff6b35'
     );
+
+    // Tageszeit-Analyse
+    const hourBuckets = Array(24).fill(null).map(() => ({avgs:[]}));
+    RAW.forEach(match => {
+      const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+      if (!me) return;
+      const hour = new Date(match.finishedAt||match.createdAt).getHours();
+      const mStats = getStatsFor(key).find(s => s.matchId === match.id);
+      if (mStats) hourBuckets[hour].avgs.push(mStats.avg3Dart);
+    });
+
+    const hourAvgs = hourBuckets.map(b => b.avgs.length ? b.avgs.reduce((a,v)=>a+v,0)/b.avgs.length : null);
+    const hourLabels = Array.from({length:24}, (_,i) => i+'h');
+
+    const c = document.getElementById('tr-hourly');
+    if (c) {
+      c.width = c.parentElement.getBoundingClientRect().width || 600;
+      c.height = 160;
+      const ctx = c.getContext('2d');
+      const pad = {l:40,r:12,t:12,b:24};
+      const W = c.width-pad.l-pad.r, H = c.height-pad.t-pad.b;
+      const vals = hourAvgs.filter(v=>v!==null);
+      const mn = vals.length ? Math.min(...vals)*0.9 : 0;
+      const mx = vals.length ? Math.max(...vals)*1.1 : 1;
+      const barW = W/24 - 2;
+      const xOf = i => pad.l + i*(W/24) + 1;
+      const yOf = v => pad.t + H - ((v-mn)/(mx-mn||1))*H;
+
+      ctx.clearRect(0,0,c.width,c.height);
+
+      // Grid
+      [0,0.5,1].forEach(f => {
+        const v = mn+(mx-mn)*f, y = Math.round(yOf(v))+0.5;
+        ctx.strokeStyle='rgba(30,42,56,0.8)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+W,y); ctx.stroke();
+        ctx.fillStyle='#4a6070'; ctx.font='9px monospace'; ctx.textAlign='right';
+        ctx.fillText(v.toFixed(1),pad.l-4,y+3);
+      });
+
+      // Bars
+      hourAvgs.forEach((v, i) => {
+        if (v === null) return;
+        const x = xOf(i);
+        const y = yOf(v);
+        const h = pad.t+H - y;
+        // Color by time of day
+        const colors = i<6?'#4a6070':i<12?'#00e5ff':i<18?'#ffd600':'#b388ff';
+        ctx.fillStyle = colors;
+        ctx.fillRect(x, y, barW, h);
+        // Count label
+        const cnt = hourBuckets[i].avgs.length;
+        if (cnt > 0) {
+          ctx.fillStyle='rgba(200,216,232,0.7)'; ctx.font='8px monospace'; ctx.textAlign='center';
+          ctx.fillText(cnt+'x', x+barW/2, y-3);
+        }
+      });
+
+      // X labels
+      ctx.fillStyle='#4a6070'; ctx.font='9px monospace'; ctx.textAlign='center';
+      [0,3,6,9,12,15,18,21].forEach(i => {
+        ctx.fillText(i+'h', xOf(i)+barW/2, pad.t+H+14);
+      });
+
+      // Legend
+      [['Nacht (0-5)','#4a6070'],['Morgen (6-11)','#00e5ff'],['Nachmittag (12-17)','#ffd600'],['Abend (18-23)','#b388ff']].forEach(([l,c],i) => {
+        ctx.fillStyle=c; ctx.fillRect(pad.l+i*120, pad.t+H+18, 10, 8);
+        ctx.fillStyle='#c8d8e8'; ctx.textAlign='left'; ctx.font='9px monospace';
+        ctx.fillText(l, pad.l+i*120+13, pad.t+H+25);
+      });
+    }
   }, 50);
 }
 
@@ -2298,6 +2544,8 @@ document.querySelectorAll('nav button').forEach(btn=>{
     if (btn.dataset.tab==='checkouts') renderCheckoutsTab();
     if (btn.dataset.tab==='training')  setTimeout(renderTrainingTab,50);
     if (btn.dataset.tab==='rounds')    setTimeout(renderRoundsTab,50);
+    if (btn.dataset.tab==='opponents') setTimeout(renderOpponentsTab,50);
+    if (btn.dataset.tab==='compare')   renderCompareTab();
   });
 });
 
@@ -2746,6 +2994,173 @@ function _drawDarts(canvas, throws, mode, size) {
     ctx.beginPath();ctx.arc(px,py,r*0.35,0,2*Math.PI);ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fill();
   });
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// GEGNER-DATENBANK
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderOpponentsTab() {
+  const key = selectedPlayer('op-player');
+  const el  = document.getElementById('op-content');
+  if (!el) return;
+
+  // Aggregate per opponent
+  const oppMap = {};
+  getStatsFor(key).forEach(s => {
+    const opp = s.opponentName || '—';
+    if (!oppMap[opp]) oppMap[opp] = {
+      name: opp, matches: 0, wins: 0,
+      avgSum: 0, f9Sum: 0, coSum: 0,
+      effAtt: 0, effHit: 0,
+    };
+    const o = oppMap[opp];
+    o.matches++;
+    if (s.isWinner) o.wins++;
+    o.avgSum += s.avg3Dart;
+    o.f9Sum  += s.first9Avg;
+    o.coSum  += s.checkoutPct;
+    o.effAtt += s.effDoubleAttempts;
+    o.effHit += s.effDoubleHits;
+  });
+
+  const opps = Object.values(oppMap).sort((a,b) => b.matches - a.matches);
+  if (!opps.length) { el.innerHTML = '<div class="no-data">Keine Daten</div>'; return; }
+
+  el.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table class="data-table opp-table">
+        <thead><tr>
+          <th class="sortable" onclick="sortOpponents('name',this)">GEGNER</th>
+          <th class="sortable" onclick="sortOpponents('matches',this)">MATCHES</th>
+          <th class="sortable" onclick="sortOpponents('winRate',this)">WIN %</th>
+          <th class="sortable" onclick="sortOpponents('avg',this)">AVG</th>
+          <th class="sortable" onclick="sortOpponents('f9',this)">FIRST-9</th>
+          <th class="sortable" onclick="sortOpponents('co',this)">CHECKOUT%</th>
+          <th class="sortable" onclick="sortOpponents('eff',this)">EFF.DOPPEL</th>
+        </tr></thead>
+        <tbody>
+          ${opps.map(o => {
+            const winRate = (o.wins/o.matches*100);
+            const avg  = o.avgSum/o.matches;
+            const f9   = o.f9Sum/o.matches;
+            const co   = o.coSum/o.matches;
+            const eff  = o.effAtt > 0 ? o.effHit/o.effAtt*100 : 0;
+            return `<tr>
+              <td><strong>${o.name}</strong></td>
+              <td>${o.matches}</td>
+              <td style="color:${winRate>=50?'var(--green)':'var(--red)'};font-weight:bold;">${winRate.toFixed(0)}% <span style="color:var(--muted);font-size:11px;">(${o.wins}W/${o.matches-o.wins}L)</span></td>
+              <td style="color:${avgColor(avg)}">${avg.toFixed(2)}</td>
+              <td>${f9.toFixed(1)}</td>
+              <td>${co.toFixed(1)}%</td>
+              <td style="color:${effDblColor(eff)}">${eff.toFixed(1)}%</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+let oppSortCol = 'matches', oppSortDir = -1;
+function sortOpponents(col, th) {
+  if (oppSortCol === col) oppSortDir *= -1;
+  else { oppSortCol = col; oppSortDir = -1; }
+  document.querySelectorAll('.opp-table th').forEach(t => t.classList.remove('sort-asc','sort-desc'));
+  th.classList.add(oppSortDir === 1 ? 'sort-asc' : 'sort-desc');
+  renderOpponentsTab();
+}
+
+document.getElementById('op-player')?.addEventListener('change', renderOpponentsTab);
+
+// ═══════════════════════════════════════════════════════════════════════
+// PERIODEN-VERGLEICH
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderCompareTab() {
+  const key    = selectedPlayer('cmp-player');
+  const aFrom  = document.getElementById('cmp-a-from')?.value || null;
+  const aTo    = document.getElementById('cmp-a-to')?.value   || null;
+  const bFrom  = document.getElementById('cmp-b-from')?.value || null;
+  const bTo    = document.getElementById('cmp-b-to')?.value   || null;
+  const el     = document.getElementById('cmp-content');
+  if (!el) return;
+
+  const statsA = getStatsFor(key, aFrom, aTo);
+  const statsB = getStatsFor(key, bFrom, bTo);
+
+  if (!statsA.length && !statsB.length) {
+    el.innerHTML = '<div class="no-data">Keine Daten für die gewählten Zeiträume.</div>';
+    return;
+  }
+
+  const calc = stats => {
+    if (!stats.length) return null;
+    const wins   = stats.filter(s=>s.isWinner).length;
+    const effAtt = stats.reduce((a,s)=>a+s.effDoubleAttempts,0);
+    const effHit = stats.reduce((a,s)=>a+s.effDoubleHits,0);
+    return {
+      matches:  stats.length,
+      winPct:   wins/stats.length*100,
+      avg:      stats.reduce((a,s)=>a+s.avg3Dart,0)/stats.length,
+      f9:       stats.reduce((a,s)=>a+s.first9Avg,0)/stats.length,
+      co:       stats.reduce((a,s)=>a+s.checkoutPct,0)/stats.length,
+      eff:      effAtt > 0 ? effHit/effAtt*100 : 0,
+      t180:     stats.reduce((a,s)=>a+s.turnsWith180,0),
+      busts:    stats.reduce((a,s)=>a+s.bust,0)/stats.length,
+      highest:  Math.max(...stats.map(s=>s.highestTurn)),
+    };
+  };
+
+  const A = calc(statsA);
+  const B = calc(statsB);
+
+  const labelA = aFrom||aTo ? `${aFrom||'?'} – ${aTo||'?'}` : 'Alle';
+  const labelB = bFrom||bTo ? `${bFrom||'?'} – ${bTo||'?'}` : 'Alle';
+
+  const rows = [
+    { label:'Matches',          ka:'matches',  fmt: v=>v,              higher:true  },
+    { label:'Win %',            ka:'winPct',   fmt: v=>v.toFixed(1)+'%', higher:true },
+    { label:'Average',          ka:'avg',      fmt: v=>v.toFixed(2),   higher:true  },
+    { label:'First-9 Avg',      ka:'f9',       fmt: v=>v.toFixed(1),   higher:true  },
+    { label:'Checkout %',       ka:'co',       fmt: v=>v.toFixed(1)+'%', higher:true },
+    { label:'Eff. Doppelquote', ka:'eff',      fmt: v=>v.toFixed(1)+'%', higher:true },
+    { label:'180s gesamt',      ka:'t180',     fmt: v=>v,              higher:true  },
+    { label:'Busts / Match',    ka:'busts',    fmt: v=>v.toFixed(1),   higher:false },
+    { label:'Höchste Aufnahme', ka:'highest',  fmt: v=>v,              higher:true  },
+  ];
+
+  const arrow = (va, vb, higher) => {
+    if (va === null || vb === null) return '';
+    const better = higher ? va > vb : va < vb;
+    const worse  = higher ? va < vb : va > vb;
+    if (better) return '<span class="compare-arrow compare-better">▲</span>';
+    if (worse)  return '<span class="compare-arrow compare-worse">▼</span>';
+    return '<span class="compare-arrow compare-equal">─</span>';
+  };
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-top:8px;">
+      <div style="padding:14px 16px;background:var(--bg2);font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:1px;border-bottom:2px solid var(--border);">METRIK</div>
+      <div style="padding:14px 16px;background:var(--bg2);font-family:var(--font-head);font-size:13px;color:var(--accent);letter-spacing:2px;border-bottom:2px solid var(--border);">A · ${labelA}</div>
+      <div style="padding:14px 16px;background:var(--bg2);font-family:var(--font-head);font-size:13px;color:var(--accent2);letter-spacing:2px;border-bottom:2px solid var(--border);">B · ${labelB}</div>
+      ${rows.map(r => {
+        const va = A?.[r.ka], vb = B?.[r.ka];
+        const aStr = va != null ? r.fmt(va) : '—';
+        const bStr = vb != null ? r.fmt(vb) : '—';
+        const aBetter = va != null && vb != null && (r.higher ? va > vb : va < vb);
+        const bBetter = va != null && vb != null && (r.higher ? vb > va : vb < va);
+        return `
+          <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:12px;color:var(--muted);">${r.label}</div>
+          <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:14px;font-weight:bold;color:${aBetter?'var(--green)':va!=null&&bBetter?'var(--red)':'var(--text)'};">
+            ${aStr} ${arrow(va, vb, r.higher)}
+          </div>
+          <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:14px;font-weight:bold;color:${bBetter?'var(--green)':vb!=null&&aBetter?'var(--red)':'var(--text)'};">
+            ${bStr} ${arrow(vb, va, r.higher)}
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+document.getElementById('cmp-player')?.addEventListener('change', renderCompareTab);
 
 // ═══════════════════════════════════════════════════════════════════════
 // SETTINGS / THEMES

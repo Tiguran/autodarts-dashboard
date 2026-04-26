@@ -995,6 +995,22 @@ let RAW = [];       // raw match detail objects
 let STATS = [];     // computed per-match per-player stats
 let PLAYERS = [];   // unique players {id, name}
 
+// Global helper: score a single throw segment correctly
+// multiplier=0 means Miss (no score), regardless of number
+function segScore(seg) {
+  if (!seg) return 0;
+  const mult = seg.multiplier ?? 1;
+  if (mult === 0) return 0;
+  if (seg.points != null) return seg.points * mult;
+  const name = seg.name || '';
+  if (name === 'Bull') return 50;
+  if (name === '25')   return 25;
+  if (!name || name[0] === 'M') return 0;
+  const num = parseInt(name.slice(1));
+  const m = { S:1, D:2, T:3 }[name[0]] ?? 1;
+  return (isNaN(num) ? 0 : num) * m;
+}
+
 function computePlayerStats(match) {
   const players = match.players || [];
   const games   = match.games   || [];
@@ -1009,30 +1025,14 @@ function computePlayerStats(match) {
     legsWon: 0, setsWon: 0,
     highestTurn: 0, turnsWith180: 0, turnsWith140plus: 0, turnsWith100plus: 0,
     bust: 0, checkoutAttempts: 0, checkoutHits: 0,
-    effDoubleAttempts: 0, effDoubleHits: 0,  // Effektive Doppelquote
-    effDoubleOnSeq: false,                    // tracking: are we in checkout sequence this leg?
+    effDoubleAttempts: 0, effDoubleHits: 0,
+    effDoubleOnSeq: false,
     first9Darts: [], checkoutRoutes: [], segmentHits: {},
     checkoutDetails: [],
   }));
 
   const byIdx = {};
   stats.forEach(s => { byIdx[s.playerIndex] = s; });
-
-  // Helper: score a single throw segment correctly
-  // multiplier=0 means Miss (no score), regardless of number
-  function segScore(seg) {
-    if (!seg) return 0;
-    const mult = seg.multiplier ?? 1;
-    if (mult === 0) return 0;                    // Miss
-    if (seg.points != null) return seg.points * mult;
-    const name = seg.name || '';
-    if (name === 'Bull') return 50;
-    if (name === '25')   return 25;
-    if (!name || name[0] === 'M') return 0;      // M* = Miss
-    const num = parseInt(name.slice(1));
-    const m = { S:1, D:2, T:3 }[name[0]] ?? 1;
-    return (isNaN(num) ? 0 : num) * m;
-  }
 
   games.forEach(game => {
     const turns = game.turns || [];

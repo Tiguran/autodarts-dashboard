@@ -3893,7 +3893,6 @@ function onLogin(user) {
 async function loadFromSupabase() {
   if (!currentUser) { alert('Bitte zuerst anmelden.'); return; }
 
-  // setStatus existiert nur wenn App bereits initialisiert
   const updateStatus = (msg) => {
     const el = document.getElementById('__ad_status');
     if (el) el.textContent = msg;
@@ -3911,7 +3910,13 @@ async function loadFromSupabase() {
   if (error) { updateStatus('❌ ' + error.message); console.error('Supabase error:', error); return; }
   if (!data?.length) { updateStatus('⚠️ Keine Matches gefunden. Erst mit Userscript hochladen.'); return; }
 
-  const matches = data.map(r => r.raw_json).filter(Boolean);
+  // Filtere leere Matches (Test-Einträge oder fehlerhafte Daten)
+  const matches = data
+    .map(r => r.raw_json)
+    .filter(m => m && m.id && Array.isArray(m.players) && m.players.length > 0 && Array.isArray(m.games) && m.games.length > 0);
+
+  if (!matches.length) { updateStatus('⚠️ Keine gültigen Matches gefunden. Bitte erneut synchronisieren.'); return; }
+
   loadData(matches);
   initApp(`☁ Cloud · ${matches.length} Matches`, matches.length);
 }

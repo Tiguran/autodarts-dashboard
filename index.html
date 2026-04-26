@@ -801,6 +801,7 @@
     <button data-tab="opponents">👥 GEGNER</button>
     <button data-tab="compare">⚖ VERGLEICH</button>
     <button data-tab="darts">🎯 DART-ANALYSE</button>
+    <button data-tab="distribution">📊 VERTEILUNG</button>
   </nav>
 
   <!-- OVERVIEW -->
@@ -963,6 +964,25 @@
     </div>
     <div id="da-content"><div class="no-data">Daten laden…</div></div>
   </div>
+
+  <!-- VERTEILUNG -->
+  <div class="tab-content" id="tab-distribution">
+    <div class="filter-row" style="flex-wrap:wrap;gap:8px;">
+      <label>SPIELER</label>
+      <select id="dist-player"></select>
+      <label>MATCH</label>
+      <select id="dist-match"><option value="all">Alle Matches</option></select>
+      <label>ANSICHT</label>
+      <select id="dist-view">
+        <option value="total">Gesamt</option>
+        <option value="leg">Pro Leg</option>
+        <option value="dart">Pro Dart (1/2/3)</option>
+      </select>
+      <button class="btn btn-dim" onclick="renderDistributionTab()">ANZEIGEN</button>
+    </div>
+    <div id="dist-content"><div class="no-data">Daten laden…</div></div>
+  </div>
+
   <div class="tab-content" id="tab-heatmap">
     <div class="filter-row">
       <label>SPIELER</label>
@@ -1291,6 +1311,7 @@ function initApp(filename, count) {
   populateSelects();
   populateHmMatchSelect(PLAYERS.find(p=>p.id)?.id || PLAYERS[0]?.name);
   populateDaMatchSelect(PLAYERS.find(p=>p.id)?.id || PLAYERS[0]?.name);
+  populateDistMatchSelect(PLAYERS.find(p=>p.id)?.id || PLAYERS[0]?.name);
   setTimeout(attachHmInteraction, 100);
   renderOverviewTab();      // active tab – renders immediately
   renderMatchesTab();
@@ -1313,7 +1334,7 @@ function resetApp() {
 // ═══════════════════════════════════════════════════════════════════════
 
 function populateSelects() {
-  const ids = ['ov-player','mt-player','ch-player','hm-player','co-player','tr-player','rd-player','op-player','cmp-player','da-player'];
+  const ids = ['ov-player','mt-player','ch-player','hm-player','co-player','tr-player','rd-player','op-player','cmp-player','da-player','dist-player'];
   ids.forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
@@ -2589,7 +2610,8 @@ document.querySelectorAll('nav button').forEach(btn=>{
     if (btn.dataset.tab==='rounds')    setTimeout(renderRoundsTab,50);
     if (btn.dataset.tab==='opponents') setTimeout(renderOpponentsTab,50);
     if (btn.dataset.tab==='compare')   renderCompareTab();
-    if (btn.dataset.tab==='darts')     setTimeout(renderDartsTab,50);
+    if (btn.dataset.tab==='darts')        setTimeout(renderDartsTab,50);
+    if (btn.dataset.tab==='distribution') setTimeout(renderDistributionTab,50);
   });
 });
 
@@ -3254,34 +3276,6 @@ function renderDartsTab() {
           </div>`).join('')}
       </div>`;
 
-    // Percentage distribution across all 3 darts combined
-    const allThrows = [g.d[0], g.d[1], g.d[2]].flat();
-    const distStats = dartAvgFor(allThrows);
-    const total3    = distStats.count || 1;
-
-    html += `<div class="section-head">PROZENTUALE VERTEILUNG (ALLE 3 DARTS)</div>
-      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:24px;">
-        ${[
-          {label:'Singles',  val:distStats.singles,  color:'var(--muted)'},
-          {label:'Doubles',  val:distStats.doubles,  color:'var(--yellow)'},
-          {label:'Triples',  val:distStats.triples,  color:'var(--accent)'},
-          {label:'Bulls (50)',val:distStats.bullseye, color:'var(--green)'},
-          {label:'25er',     val:distStats.bull25,   color:'var(--green)'},
-          {label:'Misses',   val:distStats.misses,   color:'var(--red)'},
-        ].map(r => {
-          const pctVal = (r.val/total3*100).toFixed(1);
-          return `
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-              <span style="font-family:var(--font-mono);font-size:14px;color:${r.color};width:90px;">${r.label}</span>
-              <div style="flex:1;height:22px;background:var(--border);border-radius:4px;overflow:hidden;">
-                <div style="height:100%;width:${Math.min(100,parseFloat(pctVal))}%;background:${r.color};border-radius:4px;opacity:0.85;"></div>
-              </div>
-              <span style="font-family:var(--font-mono);font-size:14px;font-weight:bold;color:${r.color};width:44px;text-align:right;">${pctVal}%</span>
-              <span style="font-family:var(--font-mono);font-size:13px;color:var(--muted);width:40px;text-align:right;">${r.val}×</span>
-            </div>`;
-        }).join('')}
-      </div>`;
-
   } else {
     // Per leg or per set view
     groups.forEach(g => {
@@ -3357,6 +3351,216 @@ function renderDartsTab() {
 }
 
 function pct(n, total) { return total > 0 ? (n/total*100).toFixed(1) : '0.0'; }
+
+// ═══════════════════════════════════════════════════════════════════════
+// VERTEILUNG TAB
+// ═══════════════════════════════════════════════════════════════════════
+
+function populateDistMatchSelect(playerKey) {
+  const sel = document.getElementById('dist-match');
+  if (!sel) return;
+  const matches = RAW.filter(m => (m.players||[]).some(p => (p.userId||p.name) === playerKey));
+  sel.innerHTML = '<option value="all">Alle Matches</option>' +
+    matches.map(m => {
+      const idx  = RAW.indexOf(m);
+      const date = m.finishedAt?.slice(0,10) || '?';
+      const opp  = (m.players||[]).find(p => (p.userId||p.name) !== playerKey)?.name || '?';
+      return `<option value="${idx}">${date} · vs ${opp}</option>`;
+    }).join('');
+}
+
+function calcDistribution(throws) {
+  const total     = throws.length || 1;
+  const singles   = throws.filter(t => t.mult===1 && t.name!=='Bull' && t.name!=='25').length;
+  const doubles   = throws.filter(t => t.mult===2 && t.name!=='Bull').length;
+  const triples   = throws.filter(t => t.mult===3).length;
+  const bullseye  = throws.filter(t => t.name==='Bull').length;   // Single Bull 50
+  const bull25    = throws.filter(t => t.name==='25').length;      // Double Bull 25 → actually outer bull
+  const misses    = throws.filter(t => t.pts===0).length;
+  // Note: in autodarts, 'Bull' = 50pts (Bullseye), '25' = 25pts (outer bull)
+  return { total, singles, doubles, triples, bullseye, bull25, misses };
+}
+
+function renderDistBar(label, val, total, color, extra) {
+  const pctVal = total > 0 ? (val/total*100) : 0;
+  return `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+      <span style="font-family:var(--font-mono);font-size:15px;color:${color};width:120px;flex-shrink:0;">${label}</span>
+      <div style="flex:1;height:26px;background:var(--border);border-radius:4px;overflow:hidden;position:relative;">
+        <div style="height:100%;width:${Math.min(100,pctVal).toFixed(1)}%;background:${color};border-radius:4px;opacity:0.8;transition:width 0.4s;"></div>
+      </div>
+      <span style="font-family:var(--font-mono);font-size:15px;font-weight:bold;color:${color};width:50px;text-align:right;">${pctVal.toFixed(1)}%</span>
+      <span style="font-family:var(--font-mono);font-size:13px;color:var(--muted);width:50px;text-align:right;">${val}×</span>
+      ${extra ? `<span style="font-family:var(--font-mono);font-size:13px;color:var(--muted);">${extra}</span>` : ''}
+    </div>`;
+}
+
+function renderDistSection(throws, title) {
+  const d = calcDistribution(throws);
+  return `
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:20px;margin-bottom:20px;">
+      <div style="font-family:var(--font-head);font-size:14px;letter-spacing:2px;color:var(--accent);margin-bottom:16px;border-bottom:1px solid var(--border2);padding-bottom:8px;">
+        ${title} · <span style="color:var(--muted);font-size:12px;">${d.total} Würfe gesamt</span>
+      </div>
+      ${renderDistBar('Single',       d.singles,  d.total, 'var(--text)')}
+      ${renderDistBar('Double',       d.doubles,  d.total, 'var(--yellow)')}
+      ${renderDistBar('Triple',       d.triples,  d.total, 'var(--accent)')}
+      ${renderDistBar('Bullseye (50)',d.bullseye, d.total, 'var(--green)')}
+      ${renderDistBar('Outer Bull',   d.bull25,   d.total, 'var(--green)', '(25 Punkte)')}
+      ${renderDistBar('Miss',         d.misses,   d.total, 'var(--red)')}
+    </div>`;
+}
+
+function renderDistributionTab() {
+  const key      = selectedPlayer('dist-player');
+  const matchIdx = document.getElementById('dist-match')?.value || 'all';
+  const view     = document.getElementById('dist-view')?.value  || 'total';
+  const el       = document.getElementById('dist-content');
+  if (!el) return;
+
+  // Collect all throws for selected matches
+  const matches = matchIdx === 'all'
+    ? RAW.filter(m => (m.players||[]).some(p => (p.userId||p.name) === key))
+    : [RAW[parseInt(matchIdx)]].filter(Boolean);
+
+  if (!matches.length) { el.innerHTML = '<div class="no-data">Keine Daten</div>'; return; }
+
+  const getThrows = (filterFn) => {
+    const result = [];
+    matches.forEach(match => {
+      const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+      if (!me) return;
+      (match.games||[]).forEach(game => {
+        (game.turns||[]).forEach(turn => {
+          if (turn.playerId !== me.id) return;
+          (turn.throws||[]).forEach(th => {
+            if (!filterFn || filterFn(th, game, match)) {
+              result.push({
+                pts:  segScore(th.segment||{}),
+                name: th.segment?.name||'?',
+                mult: th.segment?.multiplier??1,
+                dart: th.throw??0,
+                leg:  game.leg,
+                set:  game.set??0,
+              });
+            }
+          });
+        });
+      });
+    });
+    return result;
+  };
+
+  let html = '';
+
+  if (view === 'total') {
+    const all = getThrows();
+    if (!all.length) { el.innerHTML = '<div class="no-data">Keine Würfe gefunden</div>'; return; }
+    html += renderDistSection(all, 'ALLE WÜRFE GESAMT');
+
+  } else if (view === 'dart') {
+    const all = getThrows();
+    if (!all.length) { el.innerHTML = '<div class="no-data">Keine Würfe gefunden</div>'; return; }
+    html += `<div class="section-head">VERTEILUNG PRO DART-POSITION</div>`;
+    const dartColors = ['var(--accent)','var(--mauve)','var(--accent2)'];
+    const dartNames  = ['DART 1','DART 2','DART 3'];
+    [0,1,2].forEach(dartIdx => {
+      const dThrows = all.filter(t => t.dart === dartIdx);
+      if (!dThrows.length) return;
+      html += renderDistSection(dThrows, `<span style="color:${dartColors[dartIdx]}">${dartNames[dartIdx]}</span>`);
+    });
+
+    // Comparison table across 3 darts
+    const dists = [0,1,2].map(i => calcDistribution(all.filter(t=>t.dart===i)));
+    html += `<div class="section-head">VERGLEICH DART 1 / 2 / 3</div>
+      <div style="overflow-x:auto;margin-bottom:24px;">
+        <table class="data-table">
+          <thead><tr>
+            <th>WURFTYP</th>
+            <th style="color:var(--accent);">DART 1</th>
+            <th style="color:var(--mauve);">DART 2</th>
+            <th style="color:var(--accent2);">DART 3</th>
+          </tr></thead>
+          <tbody>
+            ${[
+              {label:'Single',  key:'singles',  color:'var(--text)'},
+              {label:'Double',  key:'doubles',  color:'var(--yellow)'},
+              {label:'Triple',  key:'triples',  color:'var(--accent)'},
+              {label:'Bullseye',key:'bullseye', color:'var(--green)'},
+              {label:'Outer Bull',key:'bull25', color:'var(--green)'},
+              {label:'Miss',    key:'misses',   color:'var(--red)'},
+            ].map(r => `
+              <tr>
+                <td style="color:${r.color};font-weight:bold;">${r.label}</td>
+                ${dists.map(d => `<td>${d.total>0?(d[r.key]/d.total*100).toFixed(1)+'%':'—'} <span style="color:var(--muted);font-size:13px;">${d[r.key]}×</span></td>`).join('')}
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+
+  } else if (view === 'leg') {
+    // Group by leg across all matches
+    const allThrows = getThrows();
+    if (!allThrows.length) { el.innerHTML = '<div class="no-data">Keine Würfe gefunden</div>'; return; }
+
+    const legMap = {};
+    allThrows.forEach(t => {
+      const key2 = `${t.set}_${t.leg}`;
+      if (!legMap[key2]) legMap[key2] = { leg: t.leg, set: t.set, throws: [] };
+      legMap[key2].throws.push(t);
+    });
+
+    const legKeys = Object.keys(legMap).sort();
+    if (matchIdx === 'all') {
+      // Show summary table across legs
+      html += `<div class="section-head">VERTEILUNG PRO LEG (Übersicht)</div>
+        <div style="overflow-x:auto;margin-bottom:24px;">
+          <table class="data-table">
+            <thead><tr>
+              <th>LEG</th><th>Würfe</th>
+              <th>Single%</th>
+              <th style="color:var(--yellow);">Double%</th>
+              <th style="color:var(--accent);">Triple%</th>
+              <th style="color:var(--green);">Bull%</th>
+              <th style="color:var(--green);">25er%</th>
+              <th style="color:var(--red);">Miss%</th>
+            </tr></thead>
+            <tbody>
+              ${legKeys.map((k,i) => {
+                const d = calcDistribution(legMap[k].throws);
+                const p = v => d.total > 0 ? (v/d.total*100).toFixed(0)+'%' : '—';
+                return `<tr>
+                  <td>Leg ${legMap[k].leg+1}</td>
+                  <td>${d.total}</td>
+                  <td>${p(d.singles)}</td>
+                  <td style="color:var(--yellow);">${p(d.doubles)}</td>
+                  <td style="color:var(--accent);">${p(d.triples)}</td>
+                  <td style="color:var(--green);">${p(d.bullseye)}</td>
+                  <td style="color:var(--green);">${p(d.bull25)}</td>
+                  <td style="color:var(--red);">${p(d.misses)}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    } else {
+      // Single match – show each leg in detail
+      html += `<div class="section-head">VERTEILUNG PRO LEG</div>`;
+      legKeys.forEach((k,i) => {
+        html += renderDistSection(legMap[k].throws, `LEG ${legMap[k].leg+1}`);
+      });
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+document.getElementById('dist-player')?.addEventListener('change', e => {
+  populateDistMatchSelect(e.target.value);
+  renderDistributionTab();
+});
+document.getElementById('dist-match')?.addEventListener('change', renderDistributionTab);
+document.getElementById('dist-view')?.addEventListener('change', renderDistributionTab);
 
 document.getElementById('da-player')?.addEventListener('change', e => {
   populateDaMatchSelect(e.target.value);

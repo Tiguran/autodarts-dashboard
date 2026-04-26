@@ -350,6 +350,37 @@
   .phase-delta { font-size:12px; font-family:var(--font-mono); margin-left:8px; }
   .sparkline-wrap { height:40px; position:relative; }
 
+  /* ── SCHWÄCHEN-ANALYSE ── */
+  .weakness-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; margin-bottom:28px; }
+  .weakness-card {
+    background:var(--bg1); border:1px solid var(--border); border-radius:6px; padding:16px 20px;
+    border-left:4px solid var(--red);
+  }
+  .weakness-card.medium { border-left-color:var(--yellow); }
+  .weakness-card.good   { border-left-color:var(--green); }
+  .weakness-title { font-family:var(--font-head); font-size:13px; letter-spacing:1px; margin-bottom:4px; }
+  .weakness-value { font-family:var(--font-head); font-size:28px; margin:6px 0; }
+  .weakness-sub   { font-size:12px; color:var(--muted); font-family:var(--font-mono); }
+  .weakness-tip   { margin-top:10px; padding:8px 10px; background:var(--bg2); border-radius:4px;
+                    font-size:12px; color:var(--text); line-height:1.6; }
+  .score-bust-row {
+    display:flex; align-items:center; gap:10px; padding:6px 0;
+    border-bottom:1px solid var(--border); font-family:var(--font-mono); font-size:13px;
+  }
+  .score-bust-score { width:50px; color:var(--accent); font-weight:bold; }
+  .score-bust-bar-wrap { flex:1; height:8px; background:var(--border); border-radius:4px; }
+  .score-bust-bar { height:100%; border-radius:4px; }
+  .score-bust-pct { width:45px; text-align:right; font-size:12px; }
+  .score-bust-count { width:60px; text-align:right; color:var(--muted); font-size:11px; }
+  .double-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; margin-bottom:20px; }
+  .double-card {
+    background:var(--bg1); border:1px solid var(--border); border-radius:4px;
+    padding:10px 12px; text-align:center;
+  }
+  .double-card-name { font-family:var(--font-head); font-size:14px; color:var(--accent); margin-bottom:4px; }
+  .double-card-pct  { font-family:var(--font-head); font-size:22px; margin-bottom:2px; }
+  .double-card-sub  { font-size:10px; color:var(--muted); font-family:var(--font-mono); }
+
   /* ── DART-ANALYSE ── */
   .dart-pos-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
   .dart-pos-card {
@@ -757,6 +788,7 @@
     <button data-tab="rounds">🔄 RUNDEN</button>
     <button data-tab="goals">🎯 ZIELE</button>
     <button data-tab="darts">🎯 DART-ANALYSE</button>
+    <button data-tab="weakness">⚠️ SCHWÄCHEN</button>
   </nav>
 
   <!-- OVERVIEW -->
@@ -872,6 +904,16 @@
   <!-- ZIEL-TRACKER -->
   <div class="tab-content" id="tab-goals">
     <div id="goals-content"></div>
+  </div>
+
+  <!-- SCHWÄCHEN-ANALYSE -->
+  <div class="tab-content" id="tab-weakness">
+    <div class="filter-row">
+      <label>SPIELER</label>
+      <select id="wk-player"></select>
+      <button class="btn btn-dim" onclick="renderWeaknessTab()">AKTUALISIEREN</button>
+    </div>
+    <div id="wk-content"><div class="no-data">Daten laden…</div></div>
   </div>
     <div class="filter-row">
       <label>SPIELER</label>
@@ -1223,7 +1265,7 @@ function resetApp() {
 // ═══════════════════════════════════════════════════════════════════════
 
 function populateSelects() {
-  const ids = ['ov-player','mt-player','ch-player','hm-player','co-player','tr-player','rd-player','da-player'];
+  const ids = ['ov-player','mt-player','ch-player','hm-player','co-player','tr-player','rd-player','da-player','wk-player'];
   ids.forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
@@ -2308,6 +2350,7 @@ document.querySelectorAll('nav button').forEach(btn=>{
     if (btn.dataset.tab==='rounds')    setTimeout(renderRoundsTab,50);
     if (btn.dataset.tab==='goals')     renderGoalsTab();
     if (btn.dataset.tab==='darts')     setTimeout(renderDartsTab,50);
+    if (btn.dataset.tab==='weakness')  setTimeout(renderWeaknessTab,50);
   });
 });
 
@@ -3347,6 +3390,218 @@ function buildMetrics(stats) {
     busts:       { label:'Busts pro Match',  unit:'',  higher:false, current: () => stats.length ? stats.reduce((a,s)=>a+s.bust,0)/stats.length : 0,        fmt: v=>v.toFixed(1) },
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// SCHWÄCHEN-ANALYSE
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderWeaknessTab() {
+  const key  = selectedPlayer('wk-player');
+  const el   = document.getElementById('wk-content');
+  if (!el) return;
+
+  // ── 1. Score-Bust-Analyse ───────────────────────────────────────────
+  const scoreStats = {};  // score → {turns, busts, checkouts}
+
+  RAW.forEach(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return;
+    (match.games||[]).forEach(game => {
+      (game.turns||[]).forEach(turn => {
+        if (turn.playerId !== me.id) return;
+        const sb = turn.score + turn.points;
+        if (!scoreStats[sb]) scoreStats[sb] = {turns:0, busts:0, checkouts:0};
+        scoreStats[sb].turns++;
+        if (turn.busted) scoreStats[sb].busts++;
+        if (turn.score === 0) scoreStats[sb].checkouts++;
+      });
+    });
+  });
+
+  // ── 2. Doppel-Trefferquote ─────────────────────────────────────────
+  const doubleStats = {};  // D1..D20, Bull → {attempts, hits}
+
+  RAW.forEach(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return;
+    (match.games||[]).forEach(game => {
+      (game.turns||[]).forEach(turn => {
+        if (turn.playerId !== me.id) return;
+        let running = turn.score + turn.points;
+        (turn.throws||[]).forEach(throwObj => {
+          const seg  = throwObj.segment || {};
+          const name = seg.name || '';
+          const mult = seg.multiplier ?? 1;
+          const pts  = segScore(seg);
+          const isDouble = (name.startsWith('D') || name === 'Bull') && mult > 0;
+          const canDbl   = running > 0 && running <= 50 && running % 2 === 0;
+          if (isDouble && canDbl) {
+            if (!doubleStats[name]) doubleStats[name] = {attempts:0, hits:0};
+            doubleStats[name].attempts++;
+            if (running - pts === 0) doubleStats[name].hits++;
+          }
+          running -= pts;
+          if (running < 0) running += pts;
+        });
+      });
+    });
+  });
+
+  // ── 3. Ungerade Scores (Probleme beim Positionieren) ───────────────
+  const oddScores = Object.entries(scoreStats)
+    .filter(([s,d]) => parseInt(s) % 2 === 1 && parseInt(s) <= 50 && d.turns >= 2)
+    .sort((a,b) => b[1].turns - a[1].turns);
+
+  // ── 4. Bust-Scores sortiert nach Bust-Rate ─────────────────────────
+  const bustScores = Object.entries(scoreStats)
+    .filter(([s,d]) => d.turns >= 2 && d.busts > 0)
+    .map(([s,d]) => ({score: parseInt(s), ...d, bustRate: d.busts/d.turns}))
+    .sort((a,b) => b.bustRate - a.bustRate)
+    .slice(0, 15);
+
+  const maxBust = Math.max(...bustScores.map(s => s.bustRate), 0.01);
+
+  // ── 5. Doppel sortiert ─────────────────────────────────────────────
+  const doubles = Object.entries(doubleStats)
+    .map(([name, d]) => ({name, ...d, pct: d.attempts > 0 ? d.hits/d.attempts*100 : 0}))
+    .sort((a,b) => b.attempts - a.attempts);
+
+  const totalAtt = doubles.reduce((a,d) => a+d.attempts, 0);
+  const totalHit = doubles.reduce((a,d) => a+d.hits, 0);
+  const overallDblPct = totalAtt > 0 ? totalHit/totalAtt*100 : 0;
+
+  // ── Render ─────────────────────────────────────────────────────────
+  el.innerHTML = `
+
+    <div class="section-head">ZUSAMMENFASSUNG</div>
+    <div class="weakness-grid">
+      <div class="weakness-card ${overallDblPct >= 50 ? 'good' : overallDblPct >= 25 ? 'medium' : ''}">
+        <div class="weakness-title">DOPPEL-GESAMTQUOTE</div>
+        <div class="weakness-value" style="color:${effDblColor(overallDblPct)}">${overallDblPct.toFixed(1)}%</div>
+        <div class="weakness-sub">${totalHit} Treffer / ${totalAtt} Versuche</div>
+        <div class="weakness-tip">
+          ${overallDblPct < 25 ? '🔴 Doppel sind deine größte Schwäche. Fokussiere dein Training auf D16, D8 und D20.' :
+            overallDblPct < 50 ? '🟡 Ausbaufähig. Wähle 2-3 bevorzugte Doppel und trainiere diese gezielt.' :
+            '🟢 Solide Doppelquote. Weiter so!'}
+        </div>
+      </div>
+
+      <div class="weakness-card ${bustScores.length === 0 ? 'good' : bustScores[0]?.bustRate > 0.5 ? '' : 'medium'}">
+        <div class="weakness-title">HÄUFIGSTER BUST-SCORE</div>
+        <div class="weakness-value" style="color:var(--red)">
+          ${bustScores[0] ? bustScores[0].score : '—'}
+        </div>
+        <div class="weakness-sub">
+          ${bustScores[0] ? `${bustScores[0].busts}x Bust von ${bustScores[0].turns}x (${(bustScores[0].bustRate*100).toFixed(0)}%)` : 'Keine Busts'}
+        </div>
+        <div class="weakness-tip">
+          ${bustScores[0] ? `Bei Score ${bustScores[0].score} bustets du ${(bustScores[0].bustRate*100).toFixed(0)}% der Zeit. Überlege eine andere Anspielstrategie.` : '🟢 Keine auffälligen Bust-Scores.'}
+        </div>
+      </div>
+
+      <div class="weakness-card ${oddScores.length > 3 ? '' : oddScores.length > 0 ? 'medium' : 'good'}">
+        <div class="weakness-title">UNGERADE SCORES ≤50</div>
+        <div class="weakness-value" style="color:var(--yellow)">${oddScores.length}</div>
+        <div class="weakness-sub">Verschiedene ungerade Scores</div>
+        <div class="weakness-tip">
+          ${oddScores.length > 3 ? `Du landest oft auf ungeraden Scores (${oddScores.slice(0,3).map(([s])=>s).join(', ')}…) wo kein direktes Doppel möglich ist. Verbessere deine Scoring-Planung.` :
+            oddScores.length > 0 ? `Gelegentlich auf ungeraden Scores: ${oddScores.map(([s])=>s).join(', ')}` :
+            '🟢 Du landest selten auf problematischen ungeraden Scores.'}
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head">BUST-SCORES (Häufigste Probleme)</div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:28px;">
+      ${bustScores.length === 0 ? '<div class="no-data">Keine Bust-Scores</div>' :
+        bustScores.map(s => `
+          <div class="score-bust-row">
+            <span class="score-bust-score">${s.score}</span>
+            <div class="score-bust-bar-wrap">
+              <div class="score-bust-bar" style="width:${(s.bustRate/maxBust*100).toFixed(0)}%;
+                background:${s.bustRate>0.6?'var(--red)':s.bustRate>0.3?'var(--yellow)':'var(--accent)'};"></div>
+            </div>
+            <span class="score-bust-pct" style="color:${s.bustRate>0.6?'var(--red)':s.bustRate>0.3?'var(--yellow)':'var(--accent)'}">
+              ${(s.bustRate*100).toFixed(0)}%
+            </span>
+            <span class="score-bust-count">${s.busts}/${s.turns}</span>
+          </div>`).join('')}
+    </div>
+
+    <div class="section-head">DOPPEL-TREFFERQUOTE</div>
+    <div class="double-grid">
+      ${doubles.map(d => {
+        const color = d.pct >= 60 ? 'var(--green)' : d.pct >= 30 ? 'var(--yellow)' : 'var(--red)';
+        const cls   = d.pct >= 60 ? 'good' : d.pct >= 30 ? 'medium' : '';
+        return `
+          <div class="double-card ${cls}" style="border-top:3px solid ${color}">
+            <div class="double-card-name">${d.name}</div>
+            <div class="double-card-pct" style="color:${color}">${d.pct.toFixed(0)}%</div>
+            <div class="double-card-sub">${d.hits}/${d.attempts} Versuche</div>
+          </div>`;
+      }).join('')}
+    </div>
+
+    ${oddScores.length > 0 ? `
+    <div class="section-head">UNGERADE SCORES (Kein direktes Doppel möglich)</div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:28px;font-family:var(--font-mono);">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${oddScores.map(([s,d]) => `
+          <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:8px 12px;text-align:center;">
+            <div style="font-size:18px;font-family:var(--font-head);color:var(--yellow);">${s}</div>
+            <div style="font-size:11px;color:var(--muted);">${d.turns}× gespielt</div>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6;">
+        💡 Tipp: Bei Score 5 → erst S1 werfen → dann D2. Bei Score 23 → erst S3 → dann D10.
+      </div>
+    </div>` : ''}
+
+    <div class="section-head">TRAININGSEMPFEHLUNGEN</div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:20px;">
+      ${generateTips(doubles, bustScores, oddScores, overallDblPct)}
+    </div>
+  `;
+}
+
+function generateTips(doubles, bustScores, oddScores, overallDblPct) {
+  const tips = [];
+
+  // Schlechteste Doppel mit mind. 2 Versuchen
+  const weakDoubles = doubles.filter(d => d.attempts >= 2 && d.pct < 40)
+    .sort((a,b) => a.pct - b.pct).slice(0,3);
+  if (weakDoubles.length) {
+    tips.push(`🎯 <strong>Doppel-Training:</strong> Fokussiere auf ${weakDoubles.map(d=>d.name).join(', ')} – dort ist deine Quote am niedrigsten (${weakDoubles.map(d=>d.pct.toFixed(0)+'%').join(', ')}).`);
+  }
+
+  // Beste Doppel
+  const bestDoubles = doubles.filter(d => d.attempts >= 2 && d.pct >= 60)
+    .sort((a,b) => b.pct - a.pct).slice(0,2);
+  if (bestDoubles.length) {
+    tips.push(`✅ <strong>Stärken nutzen:</strong> ${bestDoubles.map(d=>d.name).join(' und ')} sind deine stärksten Doppel (${bestDoubles.map(d=>d.pct.toFixed(0)+'%').join(', ')}). Versuche dich öfter auf diese Scores zu spielen.`);
+  }
+
+  // Bust-Strategie
+  if (bustScores.length && bustScores[0].bustRate > 0.4) {
+    tips.push(`⚠️ <strong>Bust-Reduktion:</strong> Bei Score ${bustScores[0].score} bustets du ${(bustScores[0].bustRate*100).toFixed(0)}% der Zeit. Überlege ob du einen anderen Weg wählen kannst.`);
+  }
+
+  // Ungerade Scores
+  if (oddScores.length > 2) {
+    tips.push(`📐 <strong>Scoring-Planung:</strong> Du landest oft auf ungeraden Scores. Versuche immer auf gerade Zahlen zu zielen um direkte Doppelchancen zu haben.`);
+  }
+
+  // Allgemeine Empfehlung
+  if (overallDblPct < 20) {
+    tips.push(`🔴 <strong>Priorität #1:</strong> Deine Doppelquote (${overallDblPct.toFixed(1)}%) ist der wichtigste Hebel. Tägliches Doppel-Training von 10 Minuten würde deinen Average stark verbessern.`);
+  }
+
+  return tips.length
+    ? tips.map(t => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.7;">${t}</div>`).join('')
+    : '<div style="color:var(--muted);font-size:13px;">Noch zu wenig Daten für Empfehlungen.</div>';
+}
+
+document.getElementById('wk-player')?.addEventListener('change', renderWeaknessTab);
 
 // ═══════════════════════════════════════════════════════════════════════
 // SETTINGS / THEMES

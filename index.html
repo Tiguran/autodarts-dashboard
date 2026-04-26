@@ -381,6 +381,13 @@
   .double-card-pct  { font-family:var(--font-head); font-size:22px; margin-bottom:2px; }
   .double-card-sub  { font-size:10px; color:var(--muted); font-family:var(--font-mono); }
 
+  /* ── SORTABLE TABLE ── */
+  th.sortable { cursor:pointer; user-select:none; white-space:nowrap; }
+  th.sortable:hover { color:var(--accent); }
+  th.sortable::after { content:' ↕'; color:var(--border2); font-size:10px; }
+  th.sort-asc::after  { content:' ▲'; color:var(--accent); }
+  th.sort-desc::after { content:' ▼'; color:var(--accent); }
+
   /* ── MATCH DETAIL MODAL ── */
   #match-modal {
     display: none; position: fixed; inset: 0; z-index: 8000;
@@ -753,9 +760,18 @@
     <div style="overflow-x:auto;">
       <table class="data-table" id="matches-table">
         <thead><tr>
-          <th>DATUM</th><th>GEGNER</th><th>LEGS</th>
-          <th>AVG</th><th>FIRST-9</th><th>CHECKOUT%</th>
-          <th>EFF.DOPPEL</th><th>180s</th><th>140+</th><th>100+</th><th>BUSTS</th><th>ERGEBNIS</th>
+          <th class="sortable" data-col="matchDate">DATUM</th>
+          <th class="sortable" data-col="opponentName">GEGNER</th>
+          <th>LEGS</th>
+          <th class="sortable" data-col="avg3Dart">AVG</th>
+          <th class="sortable" data-col="first9Avg">FIRST-9</th>
+          <th class="sortable" data-col="checkoutPct">CHECKOUT%</th>
+          <th class="sortable" data-col="effDoublePct">EFF.DOPPEL</th>
+          <th class="sortable" data-col="turnsWith180">180s</th>
+          <th class="sortable" data-col="turnsWith140plus">140+</th>
+          <th class="sortable" data-col="turnsWith100plus">100+</th>
+          <th class="sortable" data-col="bust">BUSTS</th>
+          <th class="sortable" data-col="isWinner">ERGEBNIS</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -816,6 +832,8 @@
     </div>
     <div id="rd-content"><div class="no-data">Daten laden…</div></div>
   </div>
+  <!-- HEATMAP -->
+  <div class="tab-content" id="tab-heatmap">
     <div class="filter-row">
       <label>SPIELER</label>
       <select id="hm-player"></select>
@@ -1257,13 +1275,24 @@ document.getElementById('ov-player').addEventListener('change', renderOverviewTa
 // MATCHES TAB
 // ═══════════════════════════════════════════════════════════════════════
 
+let mtSortCol = 'matchDate';
+let mtSortDir = -1; // -1 = desc, 1 = asc
+
 function renderMatchesTab() {
   const key  = selectedPlayer('mt-player');
   const from = document.getElementById('mt-from').value || null;
   const to   = document.getElementById('mt-to').value   || null;
   const stats = getStatsFor(key, from, to);
 
-  document.querySelector('#matches-table tbody').innerHTML = [...stats].reverse().map(s => `
+  // Sort
+  const sorted = [...stats].sort((a, b) => {
+    let va = a[mtSortCol], vb = b[mtSortCol];
+    if (typeof va === 'string') return mtSortDir * va.localeCompare(vb);
+    if (typeof va === 'boolean') return mtSortDir * ((va ? 1 : 0) - (vb ? 1 : 0));
+    return mtSortDir * ((va || 0) - (vb || 0));
+  });
+
+  document.querySelector('#matches-table tbody').innerHTML = sorted.map(s => `
     <tr class="mr-clickable" onclick="openMatchModal('${s.matchId}')">
       <td>${s.matchDate?.slice(0,10)||'—'}</td>
       <td>${s.opponentName||'—'}</td>
@@ -1280,9 +1309,31 @@ function renderMatchesTab() {
       <td>${s.bust}</td>
       <td>${s.isWinner ? '<span class="win-badge">SIEG</span>' : '<span class="loss-badge">NIEDERLAGE</span>'}</td>
     </tr>`).join('');
+
+  // Update sort indicators on headers
+  document.querySelectorAll('#matches-table th.sortable').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+    if (th.dataset.col === mtSortCol) {
+      th.classList.add(mtSortDir === 1 ? 'sort-asc' : 'sort-desc');
+    }
+  });
 }
 
 document.getElementById('mt-player').addEventListener('change', renderMatchesTab);
+
+// Sortierung per Klick auf Spaltenköpfe
+document.querySelectorAll('#matches-table th.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (mtSortCol === col) {
+      mtSortDir *= -1;
+    } else {
+      mtSortCol = col;
+      mtSortDir = col === 'matchDate' ? -1 : -1;
+    }
+    renderMatchesTab();
+  });
+});
 
 // ═══════════════════════════════════════════════════════════════════════
 // CHARTS TAB

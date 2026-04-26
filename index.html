@@ -3632,7 +3632,15 @@ function onLogin(user) {
 // ── Load from Supabase ─────────────────────────────────────────────────
 async function loadFromSupabase() {
   if (!currentUser) { alert('Bitte zuerst anmelden.'); return; }
-  setStatus('⏳ Lade Matches aus Cloud…');
+
+  // setStatus existiert nur wenn App bereits initialisiert
+  const updateStatus = (msg) => {
+    const el = document.getElementById('__ad_status');
+    if (el) el.textContent = msg;
+    else console.log('[Dashboard]', msg);
+  };
+
+  updateStatus('⏳ Lade Matches aus Cloud…');
 
   const { data, error } = await sb
     .from('matches')
@@ -3640,10 +3648,10 @@ async function loadFromSupabase() {
     .order('finished_at', { ascending: false })
     .limit(500);
 
-  if (error) { setStatus('❌ ' + error.message); return; }
-  if (!data?.length) { setStatus('⚠️ Keine Matches gefunden. Erst mit Userscript hochladen.'); return; }
+  if (error) { updateStatus('❌ ' + error.message); console.error('Supabase error:', error); return; }
+  if (!data?.length) { updateStatus('⚠️ Keine Matches gefunden. Erst mit Userscript hochladen.'); return; }
 
-  const matches = data.map(r => r.raw_json);
+  const matches = data.map(r => r.raw_json).filter(Boolean);
   loadData(matches);
   initApp(`☁ Cloud · ${matches.length} Matches`, matches.length);
 }

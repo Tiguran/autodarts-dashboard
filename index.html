@@ -396,11 +396,11 @@
   .dart-pos-card.d3 .dart-pos-avg { color:var(--accent2); }
   .dart-pos-sub { font-family:var(--font-mono); font-size: 14px; color:var(--muted); }
   .dart-breakdown { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:10px; font-family:var(--font-mono); font-size: 13px; }
-  .dart-seg-bar-row { display:flex; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid var(--border); font-family:var(--font-mono); font-size: 14px; }
-  .dart-seg-name  { width:44px; color:var(--accent); font-weight:bold; }
-  .dart-seg-wrap  { flex:1; height:7px; background:var(--border); border-radius:3px; }
-  .dart-seg-fill  { height:100%; border-radius:3px; }
-  .dart-seg-info  { width:80px; text-align:right; color:var(--muted); font-size: 13px; }
+  .dart-seg-bar-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); font-family:var(--font-mono); font-size: 15px; }
+  .dart-seg-name  { width:52px; color:var(--accent); font-weight:bold; font-size:15px; }
+  .dart-seg-wrap  { flex:1; height:10px; background:var(--border); border-radius:4px; }
+  .dart-seg-fill  { height:100%; border-radius:4px; }
+  .dart-seg-info  { width:90px; text-align:right; color:var(--muted); font-size:14px; }
   .da-group-head  {
     font-family:var(--font-head); font-size: 14px; letter-spacing:2px; color:var(--accent);
     padding:8px 0 4px; border-bottom:2px solid var(--border2); margin-bottom:12px;
@@ -3057,17 +3057,18 @@ function populateDaMatchSelect(playerKey) {
 }
 
 function dartAvgFor(throws) {
-  if (!throws.length) return { avg:0, count:0, singles:0, doubles:0, triples:0, bulls:0, misses:0, topSegs:{} };
-  const total   = throws.reduce((a,t) => a + t.pts, 0);
-  const singles = throws.filter(t => t.mult===1 && t.name!=='Bull' && t.name!=='25').length;
-  const doubles = throws.filter(t => t.mult===2).length;
-  const triples = throws.filter(t => t.mult===3).length;
-  const bulls   = throws.filter(t => t.name==='Bull'||t.name==='25').length;
-  const misses  = throws.filter(t => t.pts===0).length;
+  if (!throws.length) return { avg:0, count:0, singles:0, doubles:0, triples:0, bullseye:0, bull25:0, misses:0, topSegs:{} };
+  const total    = throws.reduce((a,t) => a + t.pts, 0);
+  const singles  = throws.filter(t => t.mult===1 && t.name!=='Bull' && t.name!=='25').length;
+  const doubles  = throws.filter(t => t.mult===2).length;
+  const triples  = throws.filter(t => t.mult===3).length;
+  const bullseye = throws.filter(t => t.name==='Bull').length;
+  const bull25   = throws.filter(t => t.name==='25').length;
+  const misses   = throws.filter(t => t.pts===0).length;
   const segCounts = {};
   throws.forEach(t => { segCounts[t.name] = (segCounts[t.name]||0)+1; });
   const topSegs = Object.entries(segCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  return { avg: total/throws.length, count: throws.length, singles, doubles, triples, bulls, misses, topSegs };
+  return { avg: total/throws.length, count: throws.length, singles, doubles, triples, bullseye, bull25, misses, topSegs };
 }
 
 function collectDartsByGroup(playerKey, matchIdx, groupBy) {
@@ -3151,26 +3152,36 @@ function renderDartCard(throws, dartNum) {
       <div class="dart-pos-label">DART ${dartNum}</div>
       <div class="dart-pos-avg">${s.count ? s.avg.toFixed(2) : '—'}</div>
       <div class="dart-pos-sub">${s.count} Würfe · Max ${s.count ? Math.max(...throws.map(t=>t.pts)) : 0}</div>
-      <table style="width:100%;margin-top:10px;border-collapse:collapse;font-family:var(--font-mono);font-size:14px;">
+      <table style="width:100%;margin-top:12px;border-collapse:collapse;font-family:var(--font-mono);font-size:15px;">
         <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:5px 0;color:var(--muted);">Singles</td>
-          <td style="padding:5px 0;text-align:right;font-weight:bold;">${s.singles}</td>
+          <td style="padding:6px 0;color:var(--muted);">Singles</td>
+          <td style="padding:6px 0;text-align:right;font-weight:bold;">${s.singles}</td>
+          <td style="padding:6px 0;text-align:right;color:var(--muted);font-size:13px;padding-left:8px;">${s.count?((s.singles/s.count)*100).toFixed(0)+'%':'—'}</td>
         </tr>
         <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:5px 0;color:var(--yellow);">Doubles</td>
-          <td style="padding:5px 0;text-align:right;font-weight:bold;color:var(--yellow);">${s.doubles}</td>
+          <td style="padding:6px 0;color:var(--yellow);">Doubles</td>
+          <td style="padding:6px 0;text-align:right;font-weight:bold;color:var(--yellow);">${s.doubles}</td>
+          <td style="padding:6px 0;text-align:right;color:var(--muted);font-size:13px;padding-left:8px;">${s.count?((s.doubles/s.count)*100).toFixed(0)+'%':'—'}</td>
         </tr>
         <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:5px 0;color:var(--accent);">Triples</td>
-          <td style="padding:5px 0;text-align:right;font-weight:bold;color:var(--accent);">${s.triples}</td>
+          <td style="padding:6px 0;color:var(--accent);">Triples</td>
+          <td style="padding:6px 0;text-align:right;font-weight:bold;color:var(--accent);">${s.triples}</td>
+          <td style="padding:6px 0;text-align:right;color:var(--muted);font-size:13px;padding-left:8px;">${s.count?((s.triples/s.count)*100).toFixed(0)+'%':'—'}</td>
         </tr>
         <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:5px 0;color:var(--green);">Bulls</td>
-          <td style="padding:5px 0;text-align:right;font-weight:bold;color:var(--green);">${s.bulls}</td>
+          <td style="padding:6px 0;color:var(--green);">Bulls (50)</td>
+          <td style="padding:6px 0;text-align:right;font-weight:bold;color:var(--green);">${s.bullseye}</td>
+          <td style="padding:6px 0;text-align:right;color:var(--muted);font-size:13px;padding-left:8px;">${s.count?((s.bullseye/s.count)*100).toFixed(0)+'%':'—'}</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0;color:var(--green);opacity:0.7;">25er</td>
+          <td style="padding:6px 0;text-align:right;font-weight:bold;color:var(--green);opacity:0.7;">${s.bull25}</td>
+          <td style="padding:6px 0;text-align:right;color:var(--muted);font-size:13px;padding-left:8px;">${s.count?((s.bull25/s.count)*100).toFixed(0)+'%':'—'}</td>
         </tr>
         <tr>
-          <td style="padding:5px 0;color:var(--red);">Misses</td>
-          <td style="padding:5px 0;text-align:right;font-weight:bold;color:var(--red);">${s.misses}</td>
+          <td style="padding:6px 0;color:var(--red);">Misses</td>
+          <td style="padding:6px 0;text-align:right;font-weight:bold;color:var(--red);">${s.misses}</td>
+          <td style="padding:6px 0;text-align:right;color:var(--muted);font-size:13px;padding-left:8px;">${s.count?((s.misses/s.count)*100).toFixed(0)+'%':'—'}</td>
         </tr>
       </table>
     </div>`;
@@ -3243,6 +3254,34 @@ function renderDartsTab() {
           </div>`).join('')}
       </div>`;
 
+    // Percentage distribution across all 3 darts combined
+    const allThrows = [g.d[0], g.d[1], g.d[2]].flat();
+    const distStats = dartAvgFor(allThrows);
+    const total3    = distStats.count || 1;
+
+    html += `<div class="section-head">PROZENTUALE VERTEILUNG (ALLE 3 DARTS)</div>
+      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:24px;">
+        ${[
+          {label:'Singles',  val:distStats.singles,  color:'var(--muted)'},
+          {label:'Doubles',  val:distStats.doubles,  color:'var(--yellow)'},
+          {label:'Triples',  val:distStats.triples,  color:'var(--accent)'},
+          {label:'Bulls (50)',val:distStats.bullseye, color:'var(--green)'},
+          {label:'25er',     val:distStats.bull25,   color:'var(--green)'},
+          {label:'Misses',   val:distStats.misses,   color:'var(--red)'},
+        ].map(r => {
+          const pctVal = (r.val/total3*100).toFixed(1);
+          return `
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+              <span style="font-family:var(--font-mono);font-size:14px;color:${r.color};width:90px;">${r.label}</span>
+              <div style="flex:1;height:22px;background:var(--border);border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:${Math.min(100,parseFloat(pctVal))}%;background:${r.color};border-radius:4px;opacity:0.85;"></div>
+              </div>
+              <span style="font-family:var(--font-mono);font-size:14px;font-weight:bold;color:${r.color};width:44px;text-align:right;">${pctVal}%</span>
+              <span style="font-family:var(--font-mono);font-size:13px;color:var(--muted);width:40px;text-align:right;">${r.val}×</span>
+            </div>`;
+        }).join('')}
+      </div>`;
+
   } else {
     // Per leg or per set view
     groups.forEach(g => {
@@ -3282,18 +3321,29 @@ function renderDartsTab() {
               <th style="color:var(--mauve);">DART 2</th>
               <th style="color:var(--accent2);">DART 3</th>
               <th>Ø GESAMT</th>
+              <th>Singles%</th>
+              <th style="color:var(--yellow);">Doubles%</th>
+              <th style="color:var(--accent);">Triples%</th>
+              <th style="color:var(--red);">Misses%</th>
               ${groupBy==='leg'?'<th>ERGEBNIS</th>':'<th>LEGS</th>'}
             </tr></thead>
             <tbody>
               ${groups.map(g => {
                 const avgs = g.d.map(d => d.length ? d.reduce((a,t)=>a+t.pts,0)/d.length : 0);
-                const total = avgs.filter(v=>v>0).reduce((a,b)=>a+b,0) / (avgs.filter(v=>v>0).length||1);
+                const avgTotal = avgs.filter(v=>v>0).reduce((a,b)=>a+b,0) / (avgs.filter(v=>v>0).length||1);
+                const allT  = g.d.flat();
+                const dist  = dartAvgFor(allT);
+                const tot   = dist.count || 1;
                 return `<tr>
                   <td style="font-family:var(--font-mono);font-size:14px;">${g.label}</td>
                   <td style="color:var(--accent);font-weight:bold;">${avgs[0].toFixed(2)}</td>
                   <td style="color:var(--mauve);font-weight:bold;">${avgs[1].toFixed(2)}</td>
                   <td style="color:var(--accent2);font-weight:bold;">${avgs[2].toFixed(2)}</td>
-                  <td>${total.toFixed(2)}</td>
+                  <td style="font-weight:bold;">${avgTotal.toFixed(2)}</td>
+                  <td>${(dist.singles/tot*100).toFixed(0)}%</td>
+                  <td style="color:var(--yellow);">${(dist.doubles/tot*100).toFixed(0)}%</td>
+                  <td style="color:var(--accent);">${(dist.triples/tot*100).toFixed(0)}%</td>
+                  <td style="color:var(--red);">${(dist.misses/tot*100).toFixed(0)}%</td>
                   <td>${g.won!==undefined ? (g.won?'<span class="win-badge">SIEG</span>':'<span class="loss-badge">NL</span>') : (g.wins+'/'+g.legs)}</td>
                 </tr>`;
               }).join('')}

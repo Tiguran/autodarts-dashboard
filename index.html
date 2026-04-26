@@ -3411,6 +3411,37 @@ function renderDistSection(throws, title) {
     </div>`;
 }
 
+function calcNumberDistribution(throws) {
+  // Group by number (1-20, Bull, 25)
+  const numMap = {};
+  // Init all numbers
+  for (let i = 1; i <= 20; i++) numMap[i] = { total:0, single:0, double:0, triple:0 };
+  numMap['Bull'] = { total:0, single:0, double:0, triple:0 };
+  numMap['25']   = { total:0, single:0, double:0, triple:0 };
+
+  throws.forEach(t => {
+    const name = t.name;
+    if (!name || name === '?' || t.pts === 0) return; // skip misses
+
+    let num = null;
+    if (name === 'Bull') num = 'Bull';
+    else if (name === '25') num = '25';
+    else {
+      const parsed = parseInt(name.slice(1));
+      if (!isNaN(parsed) && parsed >= 1 && parsed <= 20) num = parsed;
+    }
+    if (num === null) return;
+
+    if (!numMap[num]) numMap[num] = { total:0, single:0, double:0, triple:0 };
+    numMap[num].total++;
+    if (t.mult === 1) numMap[num].single++;
+    else if (t.mult === 2) numMap[num].double++;
+    else if (t.mult === 3) numMap[num].triple++;
+  });
+
+  return numMap;
+}
+
 function renderDistributionTab() {
   const key      = selectedPlayer('dist-player');
   const matchIdx = document.getElementById('dist-match')?.value || 'all';
@@ -3418,14 +3449,13 @@ function renderDistributionTab() {
   const el       = document.getElementById('dist-content');
   if (!el) return;
 
-  // Collect all throws for selected matches
   const matches = matchIdx === 'all'
     ? RAW.filter(m => (m.players||[]).some(p => (p.userId||p.name) === key))
     : [RAW[parseInt(matchIdx)]].filter(Boolean);
 
   if (!matches.length) { el.innerHTML = '<div class="no-data">Keine Daten</div>'; return; }
 
-  const getThrows = (filterFn) => {
+  const getThrows = (dartFilter) => {
     const result = [];
     matches.forEach(match => {
       const me = (match.players||[]).find(p => (p.userId||p.name) === key);
@@ -3434,16 +3464,14 @@ function renderDistributionTab() {
         (game.turns||[]).forEach(turn => {
           if (turn.playerId !== me.id) return;
           (turn.throws||[]).forEach(th => {
-            if (!filterFn || filterFn(th, game, match)) {
-              result.push({
-                pts:  segScore(th.segment||{}),
-                name: th.segment?.name||'?',
-                mult: th.segment?.multiplier??1,
-                dart: th.throw??0,
-                leg:  game.leg,
-                set:  game.set??0,
-              });
-            }
+            if (dartFilter !== undefined && (th.throw??0) !== dartFilter) return;
+            result.push({
+              pts:  segScore(th.segment||{}),
+              name: th.segment?.name||'?',
+              mult: th.segment?.multiplier??1,
+              dart: th.throw??0,
+              leg:  game.leg,
+            });
           });
         });
       });
@@ -3451,103 +3479,110 @@ function renderDistributionTab() {
     return result;
   };
 
+  const renderNumTable = (throws, title) => {
+    const dist  = calcNumberDistribution(throws);
+    const total = throws.filter(t => t.pts > 0).length || 1;
+
+    // Sort by total hits descending, numbers 1-20 first then Bull/25
+    const nums = [...Array(20).keys()].map(i=>i+1);
+    const allKeys = [...nums, 'Bull', '25'];
+    const maxHits = Math.max(...allKeys.map(n => dist[n]?.total||0), 1);
+
+    const rows = allKeys.map(n => {
+      const d = dist[n] || {total:0, single:0, double:0, triple:0};
+      if (d.total === 0) return '';
+      const pct = (d.total/total*100).toFixed(1);
+      const barW = (d.total/maxHits*100).toFixed(1);
+      const label = n === 'Bull' ? 'BULL (50)' : n === '25' ? '25er' : n;
+      const color = n === 'Bull' || n === '25' ? 'var(--green)'
+                  : d.total === maxHits ? 'var(--accent2)'
+                  : 'var(--accent)';
+      return `
+        <tr>
+          <td style="font-family:var(--font-head);font-size:16px;font-weight:bold;color:${color};width:70px;">${label}</td>
+          <td style="width:100%;">
+            <div style="position:relative;height:22px;background:var(--border);border-radius:4px;overflow:hidden;">
+              <div style="position:absolute;left:0;top:0;height:100%;width:${barW}%;background:${color};opacity:0.75;border-radius:4px;"></div>
+              <div style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:var(--font-mono);font-size:13px;color:var(--bg);font-weight:bold;white-space:nowrap;">
+                ${d.single>0?d.single+'× S ':''} ${d.double>0?d.double+'× D ':''} ${d.triple>0?d.triple+'× T ':''}
+              </div>
+            </div>
+          </td>
+          <td style="font-family:var(--font-mono);font-size:15px;font-weight:bold;color:${color};text-align:right;padding-left:12px;white-space:nowrap;">${d.total}×</td>
+          <td style="font-family:var(--font-mono);font-size:14px;color:var(--muted);text-align:right;padding-left:8px;white-space:nowrap;">${pct}%</td>
+        </tr>`;
+    }).join('');
+
+    return `
+      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:20px;margin-bottom:24px;">
+        <div style="font-family:var(--font-head);font-size:14px;letter-spacing:2px;color:var(--accent);margin-bottom:16px;border-bottom:1px solid var(--border2);padding-bottom:8px;">
+          ${title} · <span style="color:var(--muted);font-size:12px;">${throws.filter(t=>t.pts>0).length} Treffer von ${throws.length} Würfen</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;">
+          ${rows || '<tr><td colspan="4" style="color:var(--muted);padding:10px;">Keine Daten</td></tr>'}
+        </table>
+      </div>`;
+  };
+
   let html = '';
 
   if (view === 'total') {
-    const all = getThrows();
-    if (!all.length) { el.innerHTML = '<div class="no-data">Keine Würfe gefunden</div>'; return; }
-    html += renderDistSection(all, 'ALLE WÜRFE GESAMT');
+    html += `<div class="section-head">ZAHLEN-VERTEILUNG (1-20 + BULL)</div>`;
+    html += renderNumTable(getThrows(), 'ALLE WÜRFE GESAMT');
 
   } else if (view === 'dart') {
-    const all = getThrows();
-    if (!all.length) { el.innerHTML = '<div class="no-data">Keine Würfe gefunden</div>'; return; }
-    html += `<div class="section-head">VERTEILUNG PRO DART-POSITION</div>`;
-    const dartColors = ['var(--accent)','var(--mauve)','var(--accent2)'];
-    const dartNames  = ['DART 1','DART 2','DART 3'];
-    [0,1,2].forEach(dartIdx => {
-      const dThrows = all.filter(t => t.dart === dartIdx);
-      if (!dThrows.length) return;
-      html += renderDistSection(dThrows, `<span style="color:${dartColors[dartIdx]}">${dartNames[dartIdx]}</span>`);
+    const colors = ['var(--accent)','var(--mauve)','var(--accent2)'];
+    html += `<div class="section-head">ZAHLEN-VERTEILUNG PRO DART-POSITION</div>`;
+    [0,1,2].forEach(i => {
+      const t = getThrows(i);
+      if (t.length) html += renderNumTable(t, `<span style="color:${colors[i]}">DART ${i+1}</span>`);
     });
 
-    // Comparison table across 3 darts
-    const dists = [0,1,2].map(i => calcDistribution(all.filter(t=>t.dart===i)));
-    html += `<div class="section-head">VERGLEICH DART 1 / 2 / 3</div>
-      <div style="overflow-x:auto;margin-bottom:24px;">
+  } else if (view === 'leg') {
+    const all = getThrows();
+    const legMap = {};
+    all.forEach(t => {
+      if (!legMap[t.leg]) legMap[t.leg] = [];
+      legMap[t.leg].push(t);
+    });
+
+    if (matchIdx === 'all') {
+      // Summary table across all legs
+      html += `<div class="section-head">ZAHLEN-VERTEILUNG PRO LEG (Übersicht)</div>`;
+      const allNums = [...Array(20).keys()].map(i=>i+1).concat(['Bull','25']);
+      const legKeys = Object.keys(legMap).sort((a,b)=>parseInt(a)-parseInt(b));
+      // Find top 5 numbers overall to show in table
+      const overall = calcNumberDistribution(all);
+      const top5 = allNums.filter(n=>overall[n]?.total>0).sort((a,b)=>(overall[b]?.total||0)-(overall[a]?.total||0)).slice(0,6);
+
+      html += `<div style="overflow-x:auto;margin-bottom:24px;">
         <table class="data-table">
           <thead><tr>
-            <th>WURFTYP</th>
-            <th style="color:var(--accent);">DART 1</th>
-            <th style="color:var(--mauve);">DART 2</th>
-            <th style="color:var(--accent2);">DART 3</th>
+            <th>LEG</th><th>Würfe</th>
+            ${top5.map(n=>`<th style="color:var(--accent);">${n==='Bull'?'BULL':n==='25'?'25er':n}</th>`).join('')}
           </tr></thead>
           <tbody>
-            ${[
-              {label:'Single',  key:'singles',  color:'var(--text)'},
-              {label:'Double',  key:'doubles',  color:'var(--yellow)'},
-              {label:'Triple',  key:'triples',  color:'var(--accent)'},
-              {label:'Bullseye',key:'bullseye', color:'var(--green)'},
-              {label:'Outer Bull',key:'bull25', color:'var(--green)'},
-              {label:'Miss',    key:'misses',   color:'var(--red)'},
-            ].map(r => `
-              <tr>
-                <td style="color:${r.color};font-weight:bold;">${r.label}</td>
-                ${dists.map(d => `<td>${d.total>0?(d[r.key]/d.total*100).toFixed(1)+'%':'—'} <span style="color:var(--muted);font-size:13px;">${d[r.key]}×</span></td>`).join('')}
-              </tr>`).join('')}
+            ${legKeys.map(k => {
+              const d = calcNumberDistribution(legMap[k]);
+              const t = legMap[k].length;
+              return `<tr>
+                <td>Leg ${parseInt(k)+1}</td>
+                <td>${t}</td>
+                ${top5.map(n => {
+                  const v = d[n]?.total||0;
+                  return `<td>${v>0?v+'× ('+( t>0?(v/t*100).toFixed(0):0 )+'%)':'—'}</td>`;
+                }).join('')}
+              </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>`;
 
-  } else if (view === 'leg') {
-    // Group by leg across all matches
-    const allThrows = getThrows();
-    if (!allThrows.length) { el.innerHTML = '<div class="no-data">Keine Würfe gefunden</div>'; return; }
-
-    const legMap = {};
-    allThrows.forEach(t => {
-      const key2 = `${t.set}_${t.leg}`;
-      if (!legMap[key2]) legMap[key2] = { leg: t.leg, set: t.set, throws: [] };
-      legMap[key2].throws.push(t);
-    });
-
-    const legKeys = Object.keys(legMap).sort();
-    if (matchIdx === 'all') {
-      // Show summary table across legs
-      html += `<div class="section-head">VERTEILUNG PRO LEG (Übersicht)</div>
-        <div style="overflow-x:auto;margin-bottom:24px;">
-          <table class="data-table">
-            <thead><tr>
-              <th>LEG</th><th>Würfe</th>
-              <th>Single%</th>
-              <th style="color:var(--yellow);">Double%</th>
-              <th style="color:var(--accent);">Triple%</th>
-              <th style="color:var(--green);">Bull%</th>
-              <th style="color:var(--green);">25er%</th>
-              <th style="color:var(--red);">Miss%</th>
-            </tr></thead>
-            <tbody>
-              ${legKeys.map((k,i) => {
-                const d = calcDistribution(legMap[k].throws);
-                const p = v => d.total > 0 ? (v/d.total*100).toFixed(0)+'%' : '—';
-                return `<tr>
-                  <td>Leg ${legMap[k].leg+1}</td>
-                  <td>${d.total}</td>
-                  <td>${p(d.singles)}</td>
-                  <td style="color:var(--yellow);">${p(d.doubles)}</td>
-                  <td style="color:var(--accent);">${p(d.triples)}</td>
-                  <td style="color:var(--green);">${p(d.bullseye)}</td>
-                  <td style="color:var(--green);">${p(d.bull25)}</td>
-                  <td style="color:var(--red);">${p(d.misses)}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>`;
+      html += renderNumTable(all, 'GESAMT ALLE LEGS');
     } else {
-      // Single match – show each leg in detail
-      html += `<div class="section-head">VERTEILUNG PRO LEG</div>`;
-      legKeys.forEach((k,i) => {
-        html += renderDistSection(legMap[k].throws, `LEG ${legMap[k].leg+1}`);
+      html += `<div class="section-head">ZAHLEN-VERTEILUNG PRO LEG</div>`;
+      Object.keys(legMap).sort((a,b)=>parseInt(a)-parseInt(b)).forEach(k => {
+        html += renderNumTable(legMap[k], `LEG ${parseInt(k)+1}`);
       });
     }
   }

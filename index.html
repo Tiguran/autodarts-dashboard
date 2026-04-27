@@ -2025,31 +2025,34 @@ function drawHmDarts(throws, mode) {
           // Fully transparent for zero-density areas
           r=0; g=0; b=0; a=0;
         } else {
-          // Colour map matching reference: transparent → cyan → green → yellow → orange → red → white
-        if (v < 0.08) {
-          // Very sparse – nearly transparent
-          r=0; g=Math.round(100*v/0.08); b=Math.round(80*v/0.08);
-          a = Math.round(v/0.08 * 120);
-        } else if (v < 0.25) {
-          const t = (v-0.08)/0.17;
-          r=0; g=Math.round(100+80*t); b=Math.round(80+80*t);
-          a = Math.round(130+60*t);
-        } else if (v < 0.45) {
-          const t = (v-0.25)/0.2;
-          r=Math.round(20*t); g=Math.round(180+40*t); b=Math.round(160-120*t);
-          a = Math.round(190+30*t);
-        } else if (v < 0.65) {
-          const t = (v-0.45)/0.2;
-          r=Math.round(20+235*t); g=Math.round(220+15*t); b=Math.round(40-30*t);
-          a = Math.round(220);
-        } else if (v < 0.82) {
-          const t = (v-0.65)/0.17;
-          r=255; g=Math.round(235-120*t); b=Math.round(10);
-          a = Math.round(225+10*t);
+          // Viridis palette: black/dark-purple → purple → blue → teal → green → yellow → orange/white
+        if (v < 0.05) {
+          r=Math.round(10*v/0.05); g=0; b=Math.round(20*v/0.05);
+          a=Math.round(v/0.05*180);
+        } else if (v < 0.2) {
+          const t=(v-0.05)/0.15;
+          r=Math.round(10+50*t); g=Math.round(5*t); b=Math.round(20+100*t);
+          a=Math.round(180+30*t);
+        } else if (v < 0.38) {
+          const t=(v-0.2)/0.18;
+          r=Math.round(60+10*t); g=Math.round(0+40*t); b=Math.round(120+50*t);
+          a=210;
+        } else if (v < 0.55) {
+          const t=(v-0.38)/0.17;
+          r=Math.round(70-30*t); g=Math.round(40+100*t); b=Math.round(170-50*t);
+          a=215;
+        } else if (v < 0.72) {
+          const t=(v-0.55)/0.17;
+          r=Math.round(40+160*t); g=Math.round(140+90*t); b=Math.round(120-90*t);
+          a=220;
+        } else if (v < 0.88) {
+          const t=(v-0.72)/0.16;
+          r=Math.round(200+40*t); g=Math.round(230-30*t); b=Math.round(30-20*t);
+          a=225;
         } else {
-          const t = (v-0.82)/0.18;
-          r=255; g=Math.round(115-80*t); b=Math.round(10+10*t);
-          a = Math.round(235+20*t);
+          const t=(v-0.88)/0.12;
+          r=255; g=Math.round(200+55*t); b=Math.round(10+245*t);
+          a=230+Math.round(25*t);
         }
         }
 

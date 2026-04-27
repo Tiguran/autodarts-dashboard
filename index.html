@@ -1977,13 +1977,12 @@ function drawHmDarts(throws, mode) {
   const R  = (W/2 - 6) * scale;
 
   ctx.clearRect(0, 0, W, H);
-
   if (!throws.length) return;
 
-  // ── Kernel Density Estimation Heatmap ────────────────────────────────
-  const RES   = 250;
+  // ── KDE Heatmap (always shown) ────────────────────────────────────────
+  const RES   = 300;
   const grid  = new Float32Array(RES * RES);
-  const sigma = RES * 0.06;  // smooth blobs
+  const sigma = RES * 0.055;
   const r2    = Math.ceil(sigma * 3.5);
   const sig2  = 2 * sigma * sigma;
 
@@ -1992,54 +1991,42 @@ function drawHmDarts(throws, mode) {
     const gy = ((cy - t.y * R) / H) * RES;
     const ix = Math.round(gx), iy = Math.round(gy);
     for (let dy = -r2; dy <= r2; dy++) {
-      const ny = iy + dy;
-      if (ny < 0 || ny >= RES) continue;
+      const ny = iy + dy; if (ny < 0 || ny >= RES) continue;
       for (let dx = -r2; dx <= r2; dx++) {
-        const nx = ix + dx;
-        if (nx < 0 || nx >= RES) continue;
+        const nx = ix + dx; if (nx < 0 || nx >= RES) continue;
         grid[ny * RES + nx] += Math.exp(-(dx*dx + dy*dy) / sig2);
       }
     }
   });
 
-  // Normalise 0..1
   let maxVal = 0;
   for (let i = 0; i < grid.length; i++) if (grid[i] > maxVal) maxVal = grid[i];
   if (maxVal === 0) return;
 
-  // Render ImageData with viridis palette
   const imgData = ctx.createImageData(W, H);
   const sx = RES / W, sy = RES / H;
 
   for (let py = 0; py < H; py++) {
     for (let px = 0; px < W; px++) {
       const v = grid[Math.floor(py*sy) * RES + Math.floor(px*sx)] / maxVal;
-
       let r=0, g=0, b=0, a=0;
-      if (v > 0.002) {
-        // Viridis: dark-purple → blue → teal → green → yellow → orange
-        if (v < 0.05) {
-          const t=v/0.05; r=Math.round(10*t); g=0; b=Math.round(25*t); a=Math.round(160*t);
-        } else if (v < 0.18) {
-          const t=(v-0.05)/0.13; r=Math.round(10+55*t); g=Math.round(0+5*t); b=Math.round(25+110*t); a=Math.round(160+40*t);
-        } else if (v < 0.35) {
-          const t=(v-0.18)/0.17; r=Math.round(65-15*t); g=Math.round(5+50*t); b=Math.round(135+55*t); a=200;
-        } else if (v < 0.55) {
-          const t=(v-0.35)/0.2; r=Math.round(50-30*t); g=Math.round(55+115*t); b=Math.round(190-80*t); a=210;
-        } else if (v < 0.72) {
-          const t=(v-0.55)/0.17; r=Math.round(20+200*t); g=Math.round(170+65*t); b=Math.round(110-80*t); a=215;
-        } else if (v < 0.88) {
-          const t=(v-0.72)/0.16; r=Math.round(220+35*t); g=Math.round(235-25*t); b=Math.round(30-20*t); a=220;
+      if (v > 0.003) {
+        if (v < 0.06) {
+          const t=v/0.06; b=Math.round(180*t); a=Math.round(t*150);
+        } else if (v < 0.2) {
+          const t=(v-0.06)/0.14; r=Math.round(30*t); g=Math.round(100*t); b=Math.round(180+30*t); a=Math.round(150+50*t);
+        } else if (v < 0.4) {
+          const t=(v-0.2)/0.2; r=Math.round(30-20*t); g=Math.round(100+120*t); b=Math.round(210-110*t); a=200;
+        } else if (v < 0.6) {
+          const t=(v-0.4)/0.2; r=Math.round(10+240*t); g=Math.round(220+20*t); b=Math.round(100-90*t); a=210;
+        } else if (v < 0.8) {
+          const t=(v-0.6)/0.2; r=255; g=Math.round(240-100*t); b=Math.round(10); a=215;
         } else {
-          const t=(v-0.88)/0.12; r=255; g=Math.round(210+45*t); b=Math.round(10+245*t); a=225+Math.round(30*t);
+          const t=(v-0.8)/0.2; r=255; g=Math.round(140-80*t); b=Math.round(10); a=220+Math.round(35*t);
         }
       }
-
-      const idx = (py * W + px) * 4;
-      imgData.data[idx]   = r;
-      imgData.data[idx+1] = g;
-      imgData.data[idx+2] = b;
-      imgData.data[idx+3] = a;
+      const idx=(py*W+px)*4;
+      imgData.data[idx]=r; imgData.data[idx+1]=g; imgData.data[idx+2]=b; imgData.data[idx+3]=a;
     }
   }
   ctx.putImageData(imgData, 0, 0);

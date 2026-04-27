@@ -1977,31 +1977,47 @@ function drawHmDarts(throws, mode) {
   ctx.clearRect(0,0,W,H);
   if (mode==='heat') return;
 
-  const r = Math.max(2, 4*scale);
+  const r = Math.max(2.5, 4.5*scale);
 
   throws.forEach(t => {
-    // coords are normalised: (0,0)=bull, +y=up on real board but canvas y is inverted
     const px = cx + t.x * R;
-    const py = cy - t.y * R;   // flip Y axis
+    const py = cy - t.y * R;
 
-    // Colour by multiplier
     let color;
     if(t.seg==='Bull')      color='#00ff88';
     else if(t.seg==='25')   color='#a6e3a1';
     else if(t.mult===3)     color='#00e5ff';
     else if(t.mult===2)     color='#ffd600';
-    else                    color='rgba(180,200,220,0.7)';
+    else                    color='rgba(180,200,220,0.85)';
     if(t.busted)            color='#ff3355';
 
-    // Glow shadow
-    ctx.shadowColor=color; ctx.shadowBlur=scale>1.5?8:3;
-    ctx.beginPath(); ctx.arc(px,py,r,0,2*Math.PI);
-    ctx.fillStyle=color; ctx.fill();
-    ctx.shadowBlur=0;
+    // Layer 1: wide soft outer glow
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = scale > 1.5 ? 28 : 18;
+    ctx.beginPath(); ctx.arc(px, py, r*1.4, 0, 2*Math.PI);
+    ctx.fillStyle = color.replace(')', ',0.25)').replace('rgb','rgba').replace('rgba(rgba','rgba');
+    // Simpler: just draw with high shadow
+    ctx.fillStyle = color;
+    ctx.fill();
 
-    // Centre dot
-    ctx.beginPath(); ctx.arc(px,py,Math.max(1,r*0.35),0,2*Math.PI);
-    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fill();
+    // Layer 2: medium glow
+    ctx.shadowBlur = scale > 1.5 ? 14 : 9;
+    ctx.beginPath(); ctx.arc(px, py, r, 0, 2*Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Layer 3: bright core (no shadow)
+    ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.arc(px, py, r * 0.55, 0, 2*Math.PI);
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = 0.9;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Layer 4: tiny black center dot
+    ctx.beginPath(); ctx.arc(px, py, Math.max(0.8, r*0.2), 0, 2*Math.PI);
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fill();
   });
 }
 
@@ -3052,12 +3068,27 @@ function _drawDarts(canvas, throws, mode, size) {
     else if(t.seg==='25')color='#a6e3a1';
     else if(t.mult===3)color='#00e5ff';
     else if(t.mult===2)color='#ffd600';
-    else color='rgba(180,200,220,0.7)';
+    else color='rgba(180,200,220,0.85)';
     if(t.busted)color='#ff3355';
-    ctx.shadowColor=color;ctx.shadowBlur=4;
-    ctx.beginPath();ctx.arc(px,py,r,0,2*Math.PI);ctx.fillStyle=color;ctx.fill();
+
+    // Outer glow
+    ctx.shadowColor=color; ctx.shadowBlur=16;
+    ctx.beginPath(); ctx.arc(px,py,r*1.4,0,2*Math.PI);
+    ctx.fillStyle=color; ctx.fill();
+
+    // Core glow
+    ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.arc(px,py,r,0,2*Math.PI);
+    ctx.fillStyle=color; ctx.fill();
+
+    // Bright center
     ctx.shadowBlur=0;
-    ctx.beginPath();ctx.arc(px,py,r*0.35,0,2*Math.PI);ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fill();
+    ctx.beginPath(); ctx.arc(px,py,r*0.5,0,2*Math.PI);
+    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
+
+    // Tiny black dot
+    ctx.beginPath(); ctx.arc(px,py,Math.max(0.8,r*0.2),0,2*Math.PI);
+    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fill();
   });
 }
 
@@ -3483,20 +3514,66 @@ function renderDistributionTab() {
     const dist  = calcNumberDistribution(throws);
     const total = throws.filter(t => t.pts > 0).length || 1;
 
-    // Sort by total hits descending, numbers 1-20 first then Bull/25
+    // Sort by total hits descending (häufigste zuerst)
     const nums = [...Array(20).keys()].map(i=>i+1);
-    const allKeys = [...nums, 'Bull', '25'];
-    const maxHits = Math.max(...allKeys.map(n => dist[n]?.total||0), 1);
+    const allKeys = [...nums, 'Bull', '25']
+      .filter(n => (dist[n]?.total||0) > 0)
+      .sort((a,b) => (dist[b]?.total||0) - (dist[a]?.total||0));
+
+    const maxHits = allKeys.length ? (dist[allKeys[0]]?.total||1) : 1;
+
+    // ── Column chart: 1+5+3+7 vs 20+19 ────────────────────────────────
+    const group1 = [1,5,3,7];
+    const group2 = [20,19];
+    const sum1   = group1.reduce((a,n) => a+(dist[n]?.total||0), 0);
+    const sum2   = group2.reduce((a,n) => a+(dist[n]?.total||0), 0);
+    const sumAll = throws.length || 1;
+    const pct1   = (sum1/sumAll*100).toFixed(1);
+    const pct2   = (sum2/sumAll*100).toFixed(1);
+    const maxBar = Math.max(parseFloat(pct1), parseFloat(pct2), 1);
+
+    const colChart = `
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px 20px;margin-bottom:16px;">
+        <div style="font-family:var(--font-head);font-size:13px;letter-spacing:2px;color:var(--muted);margin-bottom:14px;">1+5+3+7 vs 20+19 (kumuliert)</div>
+        <div style="display:flex;align-items:flex-end;gap:20px;height:120px;padding-bottom:8px;">
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;height:100%;">
+            <div style="flex:1;display:flex;align-items:flex-end;width:100%;">
+              <div style="width:100%;background:var(--accent2);border-radius:4px 4px 0 0;
+                height:${(parseFloat(pct1)/maxBar*100).toFixed(0)}%;
+                box-shadow:0 0 12px var(--accent2);
+                display:flex;align-items:center;justify-content:center;min-height:24px;">
+                <span style="font-family:var(--font-head);font-size:15px;color:var(--bg);font-weight:bold;">${pct1}%</span>
+              </div>
+            </div>
+            <div style="font-family:var(--font-head);font-size:13px;color:var(--accent2);margin-top:6px;">1·5·3·7</div>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);">${sum1}×</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;height:100%;">
+            <div style="flex:1;display:flex;align-items:flex-end;width:100%;">
+              <div style="width:100%;background:var(--accent);border-radius:4px 4px 0 0;
+                height:${(parseFloat(pct2)/maxBar*100).toFixed(0)}%;
+                box-shadow:0 0 12px var(--accent);
+                display:flex;align-items:center;justify-content:center;min-height:24px;">
+                <span style="font-family:var(--font-head);font-size:15px;color:var(--bg);font-weight:bold;">${pct2}%</span>
+              </div>
+            </div>
+            <div style="font-family:var(--font-head);font-size:13px;color:var(--accent);margin-top:6px;">20·19</div>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);">${sum2}×</div>
+          </div>
+        </div>
+      </div>`;
 
     const rows = allKeys.map(n => {
       const d = dist[n] || {total:0, single:0, double:0, triple:0};
-      if (d.total === 0) return '';
       const pct = (d.total/total*100).toFixed(1);
       const barW = (d.total/maxHits*100).toFixed(1);
       const label = n === 'Bull' ? 'BULL (50)' : n === '25' ? '25er' : n;
+      const isGroup1 = group1.includes(n);
+      const isGroup2 = group2.includes(n);
       const color = n === 'Bull' || n === '25' ? 'var(--green)'
-                  : d.total === maxHits ? 'var(--accent2)'
-                  : 'var(--accent)';
+                  : isGroup2 ? 'var(--accent)'
+                  : isGroup1 ? 'var(--accent2)'
+                  : 'var(--muted)';
       return `
         <tr>
           <td style="font-family:var(--font-head);font-size:16px;font-weight:bold;color:${color};width:70px;">${label}</td>
@@ -3504,7 +3581,7 @@ function renderDistributionTab() {
             <div style="position:relative;height:22px;background:var(--border);border-radius:4px;overflow:hidden;">
               <div style="position:absolute;left:0;top:0;height:100%;width:${barW}%;background:${color};opacity:0.75;border-radius:4px;"></div>
               <div style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:var(--font-mono);font-size:13px;color:var(--bg);font-weight:bold;white-space:nowrap;">
-                ${d.single>0?d.single+'× S ':''} ${d.double>0?d.double+'× D ':''} ${d.triple>0?d.triple+'× T ':''}
+                ${d.single>0?d.single+'×S ':''} ${d.double>0?d.double+'×D ':''} ${d.triple>0?d.triple+'×T ':''}
               </div>
             </div>
           </td>
@@ -3516,8 +3593,9 @@ function renderDistributionTab() {
     return `
       <div style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:20px;margin-bottom:24px;">
         <div style="font-family:var(--font-head);font-size:14px;letter-spacing:2px;color:var(--accent);margin-bottom:16px;border-bottom:1px solid var(--border2);padding-bottom:8px;">
-          ${title} · <span style="color:var(--muted);font-size:12px;">${throws.filter(t=>t.pts>0).length} Treffer von ${throws.length} Würfen</span>
+          ${title} · <span style="color:var(--muted);font-size:12px;">${throws.filter(t=>t.pts>0).length} Treffer · sortiert nach Häufigkeit</span>
         </div>
+        ${colChart}
         <table style="width:100%;border-collapse:collapse;">
           ${rows || '<tr><td colspan="4" style="color:var(--muted);padding:10px;">Keine Daten</td></tr>'}
         </table>

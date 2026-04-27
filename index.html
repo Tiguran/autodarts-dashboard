@@ -1969,56 +1969,144 @@ function drawHmDarts(throws, mode) {
   const canvas = document.getElementById('hm-darts');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const W=canvas.width, H=canvas.height;
-  const {scale,ox,oy} = hmView;
-  const cx=W/2+ox, cy=H/2+oy;
-  const R=(W/2-6)*scale;
+  const W = canvas.width, H = canvas.height;
+  const {scale, ox, oy} = hmView;
+  const cx = W/2 + ox, cy = H/2 + oy;
+  const R  = (W/2 - 6) * scale;
 
-  ctx.clearRect(0,0,W,H);
-  if (mode==='heat') return;
+  ctx.clearRect(0, 0, W, H);
 
-  const r = Math.max(2.5, 4.5*scale);
+  if (mode === 'heat' || mode === 'both') {
+    // ── Kernel Density Heatmap ────────────────────────────────────────
+    // Build heatmap on a small off-screen canvas then upscale for speed
+    const RES  = 200;   // resolution of density grid
+    const grid = new Float32Array(RES * RES);
+    const sigma = RES * 0.045;  // kernel width (~4.5% of canvas)
 
-  throws.forEach(t => {
-    const px = cx + t.x * R;
-    const py = cy - t.y * R;
+    // Convert throws to grid coords
+    const pts = throws.map(t => ({
+      gx: ((cx + t.x * R) / W) * RES,
+      gy: ((cy - t.y * R) / H) * RES,
+    }));
 
-    let color;
-    if(t.seg==='Bull')      color='#00ff88';
-    else if(t.seg==='25')   color='#a6e3a1';
-    else if(t.mult===3)     color='#00e5ff';
-    else if(t.mult===2)     color='#ffd600';
-    else                    color='rgba(180,200,220,0.85)';
-    if(t.busted)            color='#ff3355';
+    // Gaussian kernel accumulation
+    const r2 = Math.ceil(sigma * 3);
+    pts.forEach(({gx, gy}) => {
+      const ix = Math.round(gx), iy = Math.round(gy);
+      for (let dy = -r2; dy <= r2; dy++) {
+        for (let dx = -r2; dx <= r2; dx++) {
+          const nx = ix + dx, ny = iy + dy;
+          if (nx < 0 || nx >= RES || ny < 0 || ny >= RES) continue;
+          const dist2 = dx*dx + dy*dy;
+          grid[ny * RES + nx] += Math.exp(-dist2 / (2 * sigma * sigma));
+        }
+      }
+    });
 
-    // Layer 1: wide soft outer glow
-    ctx.shadowColor = color;
-    ctx.shadowBlur  = scale > 1.5 ? 28 : 18;
-    ctx.beginPath(); ctx.arc(px, py, r*1.4, 0, 2*Math.PI);
-    ctx.fillStyle = color.replace(')', ',0.25)').replace('rgb','rgba').replace('rgba(rgba','rgba');
-    // Simpler: just draw with high shadow
-    ctx.fillStyle = color;
-    ctx.fill();
+    // Normalise
+    let maxVal = 0;
+    for (let i = 0; i < grid.length; i++) if (grid[i] > maxVal) maxVal = grid[i];
+    if (maxVal === 0) maxVal = 1;
 
-    // Layer 2: medium glow
-    ctx.shadowBlur = scale > 1.5 ? 14 : 9;
-    ctx.beginPath(); ctx.arc(px, py, r, 0, 2*Math.PI);
-    ctx.fillStyle = color;
-    ctx.fill();
+    // Render to ImageData – viridis-like palette (dark purple → blue → teal → yellow → orange)
+    const imgData = ctx.createImageData(W, H);
+    const scaleX  = RES / W, scaleY = RES / H;
 
-    // Layer 3: bright core (no shadow)
+    for (let py = 0; py < H; py++) {
+      for (let px = 0; px < W; px++) {
+        const gx = Math.floor(px * scaleX);
+        const gy = Math.floor(py * scaleY);
+        const v  = grid[gy * RES + gx] / maxVal;  // 0..1
+
+        let r, g, b, a;
+        if (v < 0.001) {
+          // Fully transparent for zero-density areas
+          r=0; g=0; b=0; a=0;
+        } else {
+          // Colour map: black → purple → blue → teal → yellow → orange → white
+          if (v < 0.15) {
+            const t = v / 0.15;
+            r = Math.round(20 * t);
+            g = Math.round(5  * t);
+            b = Math.round(40 * t);
+          } else if (v < 0.35) {
+            const t = (v - 0.15) / 0.2;
+            r = Math.round(20  + 40*t);
+            g = Math.round(5   + 10*t);
+            b = Math.round(40  + 100*t);
+          } else if (v < 0.55) {
+            const t = (v - 0.35) / 0.2;
+            r = Math.round(60  - 10*t);
+            g = Math.round(15  + 100*t);
+            b = Math.round(140 + 60*t);
+          } else if (v < 0.75) {
+            const t = (v - 0.55) / 0.2;
+            r = Math.round(50  + 180*t);
+            g = Math.round(115 + 110*t);
+            b = Math.round(200 - 160*t);
+          } else if (v < 0.9) {
+            const t = (v - 0.75) / 0.15;
+            r = Math.round(230 + 20*t);
+            g = Math.round(225 - 30*t);
+            b = Math.round(40  - 30*t);
+          } else {
+            const t = (v - 0.9) / 0.1;
+            r = Math.round(250);
+            g = Math.round(195 + 60*t);
+            b = Math.round(10  + 245*t);
+          }
+          a = Math.round(Math.min(1, v * 2.5) * 210);
+        }
+
+        const idx = (py * W + px) * 4;
+        imgData.data[idx]   = r;
+        imgData.data[idx+1] = g;
+        imgData.data[idx+2] = b;
+        imgData.data[idx+3] = a;
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+
+  if (mode === 'dots' || mode === 'both') {
+    // ── Glowing Dart Points ──────────────────────────────────────────
+    const r = Math.max(2.5, 4.5 * scale);
+
+    throws.forEach(t => {
+      const px = cx + t.x * R;
+      const py = cy - t.y * R;
+
+      let color;
+      if (t.seg==='Bull')    color = '#00ff88';
+      else if (t.seg==='25') color = '#a6e3a1';
+      else if (t.mult===3)   color = '#00e5ff';
+      else if (t.mult===2)   color = '#ffd600';
+      else                   color = 'rgba(220,230,240,0.9)';
+      if (t.busted)          color = '#ff3355';
+
+      // Outer glow
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = scale > 1.5 ? 32 : 20;
+      ctx.beginPath(); ctx.arc(px, py, r * 1.5, 0, 2*Math.PI);
+      ctx.fillStyle = color; ctx.fill();
+
+      // Mid glow
+      ctx.shadowBlur = scale > 1.5 ? 16 : 10;
+      ctx.beginPath(); ctx.arc(px, py, r, 0, 2*Math.PI);
+      ctx.fillStyle = color; ctx.fill();
+
+      // Bright white core
+      ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.arc(px, py, r * 0.5, 0, 2*Math.PI);
+      ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.95; ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Tiny center
+      ctx.beginPath(); ctx.arc(px, py, Math.max(0.8, r*0.18), 0, 2*Math.PI);
+      ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fill();
+    });
     ctx.shadowBlur = 0;
-    ctx.beginPath(); ctx.arc(px, py, r * 0.55, 0, 2*Math.PI);
-    ctx.fillStyle = '#ffffff';
-    ctx.globalAlpha = 0.9;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // Layer 4: tiny black center dot
-    ctx.beginPath(); ctx.arc(px, py, Math.max(0.8, r*0.2), 0, 2*Math.PI);
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fill();
-  });
+  }
 }
 
 // ── Zoom & Pan ─────────────────────────────────────────────────────────

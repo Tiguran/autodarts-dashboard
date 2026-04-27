@@ -208,7 +208,7 @@
   canvas { display: block; width: 100% !important; }
 
   /* ── HEATMAP ── */
-  .heatmap-wrap { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+  .heatmap-wrap { display: flex; flex-direction: column; gap: 16px; max-width: 900px; }
   #hm-board-wrap {
     position: relative; flex-shrink: 0;
     border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
@@ -216,8 +216,10 @@
     box-shadow: 0 0 40px rgba(0,229,255,0.08);
     cursor: crosshair;
     touch-action: none;
+    width: 100%;
+    aspect-ratio: 1 / 1;
   }
-  #hm-board-wrap canvas { display: block; }
+  #hm-board-wrap canvas { display: block; width: 100%; height: 100%; }
   .hm-zoom-controls {
     position: absolute; bottom: 10px; right: 10px;
     display: flex; flex-direction: column; gap: 4px;
@@ -1004,9 +1006,9 @@
       Scrollen = Zoom · Ziehen = Pan · Doppelklick = Reset
     </div>
     <div class="heatmap-wrap">
-      <div id="hm-board-wrap" style="width:500px;height:500px;">
-        <canvas id="hm-board" width="500" height="500"></canvas>
-        <canvas id="hm-darts" width="500" height="500" style="position:absolute;top:0;left:0;"></canvas>
+      <div id="hm-board-wrap">
+        <canvas id="hm-board"></canvas>
+        <canvas id="hm-darts" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
         <div class="hm-zoom-controls">
           <button class="hm-zoom-btn" onclick="hmZoom(1.3)">+</button>
           <button class="hm-zoom-btn" onclick="hmZoom(0.77)">−</button>
@@ -1853,11 +1855,24 @@ function collectThrows(playerKey, matchIdx, segFilter) {
   return {throws, hits};
 }
 
+function resizeHmCanvases() {
+  const wrap  = document.getElementById('hm-board-wrap');
+  if (!wrap) return 500;
+  const size  = Math.round(wrap.getBoundingClientRect().width) || 500;
+  ['hm-board','hm-darts'].forEach(id => {
+    const c = document.getElementById(id);
+    if (c) { c.width = size; c.height = size; }
+  });
+  return size;
+}
+
 function renderHeatmapTab() {
   const key       = selectedPlayer('hm-player');
   const matchIdx  = document.getElementById('hm-match')?.value || 'all';
-  const mode      = 'both';  // Always show KDE heatmap + board
+  const mode      = 'both';
   const segFilter = document.getElementById('hm-seg')?.value   || 'all';
+
+  resizeHmCanvases();
 
   const {throws, hits} = collectThrows(key, matchIdx, segFilter);
   hmThrows  = throws;
@@ -2123,6 +2138,20 @@ document.getElementById('hm-player').addEventListener('change', e => {
 });
 document.getElementById('hm-match').addEventListener('change',  renderHeatmapTab);
 document.getElementById('hm-seg').addEventListener('change',    renderHeatmapTab);
+
+// Redraw on window resize
+if (window.ResizeObserver) {
+  const wrap = document.getElementById('hm-board-wrap');
+  if (wrap) {
+    new ResizeObserver(() => {
+      if (document.getElementById('tab-heatmap')?.classList.contains('active')) {
+        resizeHmCanvases();
+        drawHmBoard(hmSegHits, 'both');
+        drawHmDarts(hmThrows,  'both');
+      }
+    }).observe(wrap);
+  }
+}
 
 // ── Legend ─────────────────────────────────────────────────────────────
 function renderHeatmapLegend(hits) {

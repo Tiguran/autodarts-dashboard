@@ -1978,133 +1978,71 @@ function drawHmDarts(throws, mode) {
 
   ctx.clearRect(0, 0, W, H);
 
-  if (mode === 'heat' || mode === 'both') {
-    // ── Kernel Density Heatmap ────────────────────────────────────────
-    // Build heatmap on a small off-screen canvas then upscale for speed
-    const RES  = 200;   // resolution of density grid
-    const grid = new Float32Array(RES * RES);
-    const sigma = RES * 0.07;  // kernel width – larger = smoother blobs
+  if (!throws.length) return;
 
-    // Convert throws to grid coords
-    const pts = throws.map(t => ({
-      gx: ((cx + t.x * R) / W) * RES,
-      gy: ((cy - t.y * R) / H) * RES,
-    }));
+  // ── Kernel Density Estimation Heatmap ────────────────────────────────
+  const RES   = 250;
+  const grid  = new Float32Array(RES * RES);
+  const sigma = RES * 0.06;  // smooth blobs
+  const r2    = Math.ceil(sigma * 3.5);
+  const sig2  = 2 * sigma * sigma;
 
-    // Gaussian kernel accumulation
-    const r2 = Math.ceil(sigma * 3);
-    pts.forEach(({gx, gy}) => {
-      const ix = Math.round(gx), iy = Math.round(gy);
-      for (let dy = -r2; dy <= r2; dy++) {
-        for (let dx = -r2; dx <= r2; dx++) {
-          const nx = ix + dx, ny = iy + dy;
-          if (nx < 0 || nx >= RES || ny < 0 || ny >= RES) continue;
-          const dist2 = dx*dx + dy*dy;
-          grid[ny * RES + nx] += Math.exp(-dist2 / (2 * sigma * sigma));
-        }
-      }
-    });
-
-    // Normalise
-    let maxVal = 0;
-    for (let i = 0; i < grid.length; i++) if (grid[i] > maxVal) maxVal = grid[i];
-    if (maxVal === 0) maxVal = 1;
-
-    // Render to ImageData – viridis-like palette (dark purple → blue → teal → yellow → orange)
-    const imgData = ctx.createImageData(W, H);
-    const scaleX  = RES / W, scaleY = RES / H;
-
-    for (let py = 0; py < H; py++) {
-      for (let px = 0; px < W; px++) {
-        const gx = Math.floor(px * scaleX);
-        const gy = Math.floor(py * scaleY);
-        const v  = grid[gy * RES + gx] / maxVal;  // 0..1
-
-        let r, g, b, a;
-        if (v < 0.001) {
-          // Fully transparent for zero-density areas
-          r=0; g=0; b=0; a=0;
-        } else {
-          // Viridis palette: black/dark-purple → purple → blue → teal → green → yellow → orange/white
-        if (v < 0.05) {
-          r=Math.round(10*v/0.05); g=0; b=Math.round(20*v/0.05);
-          a=Math.round(v/0.05*180);
-        } else if (v < 0.2) {
-          const t=(v-0.05)/0.15;
-          r=Math.round(10+50*t); g=Math.round(5*t); b=Math.round(20+100*t);
-          a=Math.round(180+30*t);
-        } else if (v < 0.38) {
-          const t=(v-0.2)/0.18;
-          r=Math.round(60+10*t); g=Math.round(0+40*t); b=Math.round(120+50*t);
-          a=210;
-        } else if (v < 0.55) {
-          const t=(v-0.38)/0.17;
-          r=Math.round(70-30*t); g=Math.round(40+100*t); b=Math.round(170-50*t);
-          a=215;
-        } else if (v < 0.72) {
-          const t=(v-0.55)/0.17;
-          r=Math.round(40+160*t); g=Math.round(140+90*t); b=Math.round(120-90*t);
-          a=220;
-        } else if (v < 0.88) {
-          const t=(v-0.72)/0.16;
-          r=Math.round(200+40*t); g=Math.round(230-30*t); b=Math.round(30-20*t);
-          a=225;
-        } else {
-          const t=(v-0.88)/0.12;
-          r=255; g=Math.round(200+55*t); b=Math.round(10+245*t);
-          a=230+Math.round(25*t);
-        }
-        }
-
-        const idx = (py * W + px) * 4;
-        imgData.data[idx]   = r;
-        imgData.data[idx+1] = g;
-        imgData.data[idx+2] = b;
-        imgData.data[idx+3] = a;
+  throws.forEach(t => {
+    const gx = ((cx + t.x * R) / W) * RES;
+    const gy = ((cy - t.y * R) / H) * RES;
+    const ix = Math.round(gx), iy = Math.round(gy);
+    for (let dy = -r2; dy <= r2; dy++) {
+      const ny = iy + dy;
+      if (ny < 0 || ny >= RES) continue;
+      for (let dx = -r2; dx <= r2; dx++) {
+        const nx = ix + dx;
+        if (nx < 0 || nx >= RES) continue;
+        grid[ny * RES + nx] += Math.exp(-(dx*dx + dy*dy) / sig2);
       }
     }
-    ctx.putImageData(imgData, 0, 0);
+  });
+
+  // Normalise 0..1
+  let maxVal = 0;
+  for (let i = 0; i < grid.length; i++) if (grid[i] > maxVal) maxVal = grid[i];
+  if (maxVal === 0) return;
+
+  // Render ImageData with viridis palette
+  const imgData = ctx.createImageData(W, H);
+  const sx = RES / W, sy = RES / H;
+
+  for (let py = 0; py < H; py++) {
+    for (let px = 0; px < W; px++) {
+      const v = grid[Math.floor(py*sy) * RES + Math.floor(px*sx)] / maxVal;
+
+      let r=0, g=0, b=0, a=0;
+      if (v > 0.002) {
+        // Viridis: dark-purple → blue → teal → green → yellow → orange
+        if (v < 0.05) {
+          const t=v/0.05; r=Math.round(10*t); g=0; b=Math.round(25*t); a=Math.round(160*t);
+        } else if (v < 0.18) {
+          const t=(v-0.05)/0.13; r=Math.round(10+55*t); g=Math.round(0+5*t); b=Math.round(25+110*t); a=Math.round(160+40*t);
+        } else if (v < 0.35) {
+          const t=(v-0.18)/0.17; r=Math.round(65-15*t); g=Math.round(5+50*t); b=Math.round(135+55*t); a=200;
+        } else if (v < 0.55) {
+          const t=(v-0.35)/0.2; r=Math.round(50-30*t); g=Math.round(55+115*t); b=Math.round(190-80*t); a=210;
+        } else if (v < 0.72) {
+          const t=(v-0.55)/0.17; r=Math.round(20+200*t); g=Math.round(170+65*t); b=Math.round(110-80*t); a=215;
+        } else if (v < 0.88) {
+          const t=(v-0.72)/0.16; r=Math.round(220+35*t); g=Math.round(235-25*t); b=Math.round(30-20*t); a=220;
+        } else {
+          const t=(v-0.88)/0.12; r=255; g=Math.round(210+45*t); b=Math.round(10+245*t); a=225+Math.round(30*t);
+        }
+      }
+
+      const idx = (py * W + px) * 4;
+      imgData.data[idx]   = r;
+      imgData.data[idx+1] = g;
+      imgData.data[idx+2] = b;
+      imgData.data[idx+3] = a;
+    }
   }
-
-  if (mode === 'dots' || mode === 'both') {
-    // ── Glowing Dart Points ──────────────────────────────────────────
-    const r = Math.max(2.5, 4.5 * scale);
-
-    throws.forEach(t => {
-      const px = cx + t.x * R;
-      const py = cy - t.y * R;
-
-      let color;
-      if (t.seg==='Bull')    color = '#00ff88';
-      else if (t.seg==='25') color = '#a6e3a1';
-      else if (t.mult===3)   color = '#00e5ff';
-      else if (t.mult===2)   color = '#ffd600';
-      else                   color = 'rgba(220,230,240,0.9)';
-      if (t.busted)          color = '#ff3355';
-
-      // Outer glow
-      ctx.shadowColor = color;
-      ctx.shadowBlur  = scale > 1.5 ? 32 : 20;
-      ctx.beginPath(); ctx.arc(px, py, r * 1.5, 0, 2*Math.PI);
-      ctx.fillStyle = color; ctx.fill();
-
-      // Mid glow
-      ctx.shadowBlur = scale > 1.5 ? 16 : 10;
-      ctx.beginPath(); ctx.arc(px, py, r, 0, 2*Math.PI);
-      ctx.fillStyle = color; ctx.fill();
-
-      // Bright white core
-      ctx.shadowBlur = 0;
-      ctx.beginPath(); ctx.arc(px, py, r * 0.5, 0, 2*Math.PI);
-      ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.95; ctx.fill();
-      ctx.globalAlpha = 1;
-
-      // Tiny center
-      ctx.beginPath(); ctx.arc(px, py, Math.max(0.8, r*0.18), 0, 2*Math.PI);
-      ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fill();
-    });
-    ctx.shadowBlur = 0;
-  }
+  ctx.putImageData(imgData, 0, 0);
 }
 
 // ── Zoom & Pan ─────────────────────────────────────────────────────────

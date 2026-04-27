@@ -1894,6 +1894,8 @@ function drawHmBoard(hits, mode) {
   ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.fillStyle=bg; ctx.fill();
 
   const maxHits = mode==='dots' ? 1 : Math.max(1,...Object.values(hits));
+  // In heat/both mode: draw pure board without segment coloring (KDE goes on top)
+  const useSegColor = mode === 'dots';
 
   // Draw rings & sectors
   HM_SECTORS.forEach((num,si) => {
@@ -1901,7 +1903,7 @@ function drawHmBoard(hits, mode) {
     HM_RINGS.forEach(ring => {
       const segName = ring.bull ? ring.prefix : `${ring.prefix}${num}`;
       const count   = hits[segName]||0;
-      const t       = mode==='dots' ? 0 : count/maxHits;
+      const t = useSegColor ? count/maxHits : 0;
 
       // Base board colours (alternating dark/light per sector)
       const isLight = si%2===0;
@@ -1912,9 +1914,9 @@ function drawHmBoard(hits, mode) {
       else if(ring.key==='Double'){ baseR=isLight?160:10; baseG=isLight?10:10; baseB=isLight?10:10; }
       else { baseR=isLight?30:15; baseG=isLight?30:15; baseB=isLight?30:15; }
 
-      // Heat overlay
+      // Heat overlay – only in dots mode (in heat/both, KDE from drawHmDarts takes over)
       let hr=0,hg=0,hb=0,ha=0;
-      if(t>0 && mode!=='dots'){
+      if(t>0 && useSegColor){
         if(t<0.25){ hr=0;hg=Math.round(t*4*120);hb=Math.round(180-t*4*180); }
         else if(t<0.5){ hr=Math.round((t-0.25)*4*255);hg=120+Math.round((t-0.25)*4*60);hb=0; }
         else if(t<0.75){ hr=255;hg=Math.round((1-(t-0.5)*4)*180);hb=0; }

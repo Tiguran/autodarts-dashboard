@@ -895,25 +895,12 @@
     </div>
     <div class="kpi-grid" id="kpi-grid"></div>
     <div id="streak-row" style="margin-bottom:24px;"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;flex-wrap:wrap;">
-      <div>
-        <div class="section-head">SCORING-EFFIZIENZ</div>
-        <div style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:16px;">
-          <div class="donut-wrap">
-            <canvas id="ov-donut" width="130" height="130"></canvas>
-            <div class="donut-legend" id="ov-donut-legend"></div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div class="section-head">LEG-ERÖFFNUNG</div>
-        <div id="ov-leg-opening" style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:16px;"></div>
-      </div>
-    </div>
+    <div class="section-head">LEG-ERÖFFNUNG</div>
+    <div id="ov-leg-opening" style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:28px;"></div>
     <div class="section-head">PERSÖNLICHE BESTLEISTUNGEN</div>
     <div id="personal-bests" style="margin-bottom:28px;"></div>
     <div class="section-head">LETZTE 10 MATCHES</div>
-    <div style="overflow-x:auto;">
+    <div style="overflow-x:auto;margin-bottom:28px;">
       <table class="data-table" id="recent-table">
         <thead><tr>
           <th>DATUM</th><th>GEGNER</th><th>ERGEBNIS</th>
@@ -921,6 +908,13 @@
         </tr></thead>
         <tbody></tbody>
       </table>
+    </div>
+    <div class="section-head">SCORING-EFFIZIENZ</div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:28px;">
+      <div class="donut-wrap">
+        <canvas id="ov-donut" width="100" height="100"></canvas>
+        <div class="donut-legend" id="ov-donut-legend"></div>
+      </div>
     </div>
   </div>
 
@@ -1203,7 +1197,42 @@ function computePlayerStats(match) {
     const turns = game.turns || [];
     const first3ByPlayer = {};
 
-    // Reset checkout sequence tracking per leg for each player
+    // ── Effektive Doppelquote: pro LEG ───────────────────────────────
+    // Attempt = Leg wo mind. 1 Dart auf ein Doppelfeld geworfen wurde
+    // Hit     = dieses Leg gewonnen
+    const legHadDouble = {};  // playerIndex → bool
+    stats.forEach(s => { legHadDouble[s.playerIndex] = false; });
+
+    turns.forEach(turn => {
+      const pIdx = pidToIndex[turn.playerId];
+      const s = byIdx[pIdx];
+      if (s == null) return;
+
+      let runningEff = turn.score + (turn.points || 0);
+      (turn.throws || []).forEach(throwObj => {
+        const seg      = throwObj.segment || {};
+        const name     = seg.name || '';
+        const mult     = seg.multiplier ?? 1;
+        const throwPts = segScore(seg);
+        const isDouble = (name.startsWith('D') || name === 'Bull') && mult > 0;
+        const canDblOut = runningEff > 0 && runningEff <= 50 && runningEff % 2 === 0;
+        if (isDouble && canDblOut) legHadDouble[pIdx] = true;
+        runningEff -= throwPts;
+        if (runningEff < 0) runningEff += throwPts;
+      });
+    });
+
+    // End of leg: count attempt + hit per player
+    stats.forEach(s => {
+      if (legHadDouble[s.playerIndex]) {
+        s.effDoubleAttempts += 1;
+        if (game.winnerPlayerId === players.find(p => p.index === s.playerIndex)?.id) {
+          s.effDoubleHits += 1;
+        }
+      }
+    });
+
+    // Reset for next leg
     stats.forEach(s => { s.effDoubleOnSeq = false; });
 
     turns.forEach(turn => {
@@ -1226,40 +1255,9 @@ function computePlayerStats(match) {
       if (pts >= 100)  s.turnsWith100plus += 1;
       if (pts >= 60)   s.turnsWith60plus  += 1;
 
-      // ── Checkout & Effektive Doppelquote: count per THROW ────────
+      // ── Checkout & Standard Tracking ─────────────────────────────
       const scoreBefore = turn.score + pts;
       let running = scoreBefore;
-
-      // ── Effektive Doppelquote ─────────────────────────────────
-      // 1 Turn auf Doppel = 1 Attempt (egal wie viele Darts)
-      // Hit = in diesem Turn ausgemacht
-      // Turn zählt wenn mind. 1 Dart auf Doppel geworfen wurde
-      // (auch wenn davor erst ein Single nötig war)
-      let turnHadDoubleThrow = false;
-      let turnWasHit = false;
-      let runningEff = scoreBefore;
-
-      (turn.throws || []).forEach(throwObj => {
-        const seg      = throwObj.segment || {};
-        const name     = seg.name || '';
-        const mult     = seg.multiplier ?? 1;
-        const throwPts = segScore(seg);
-        const isDouble = (name.startsWith('D') || name === 'Bull') && mult > 0;
-        const canDblOut = runningEff > 0 && runningEff <= 50 && runningEff % 2 === 0;
-
-        if (isDouble && canDblOut) {
-          turnHadDoubleThrow = true;
-          if (runningEff - throwPts === 0) turnWasHit = true;
-        }
-
-        runningEff -= throwPts;
-        if (runningEff < 0) runningEff += throwPts; // bust: undo
-      });
-
-      if (turnHadDoubleThrow) {
-        s.effDoubleAttempts += 1;
-        if (turnWasHit) s.effDoubleHits += 1;
-      }
 
       (turn.throws || []).forEach(throwObj => {
         const seg  = throwObj.segment || {};
@@ -1520,9 +1518,9 @@ function renderOverviewTab() {
   const totalTurns = allTurns.length || 1;
   const donutC = document.getElementById('ov-donut');
   if (donutC) {
-    donutC.width = 130; donutC.height = 130;
+    donutC.width = 100; donutC.height = 100;
     const ctx = donutC.getContext('2d');
-    const cx=65, cy=65, R=55, r=32;
+    const cx=50, cy=50, R=44, r=26;
     let angle = -Math.PI/2;
     buckets.forEach(b => {
       const slice = (b.count/totalTurns) * 2*Math.PI;
@@ -1531,12 +1529,10 @@ function renderOverviewTab() {
       ctx.closePath(); ctx.fillStyle=b.color; ctx.fill();
       angle += slice;
     });
-    // Hole
     ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI);
     ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim() || '#0e1117';
     ctx.fill();
-    // Center text
-    ctx.fillStyle='#c8d8e8'; ctx.font='bold 13px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#c8d8e8'; ctx.font='bold 11px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(totalTurns+'T', cx, cy);
   }
   const legendEl = document.getElementById('ov-donut-legend');
@@ -2295,21 +2291,25 @@ function drawHmDarts(throws, mode) {
   const W = canvas.width, H = canvas.height;
   const {scale, ox, oy} = hmView;
   const cx = W/2 + ox, cy = H/2 + oy;
-  const R  = (W/2 - 6) * scale;
+  const R  = (Math.min(W,H)/2 - 6) * scale;
 
   ctx.clearRect(0, 0, W, H);
   if (!throws.length) return;
 
-  // ── KDE Heatmap (always shown) ────────────────────────────────────────
+  // ── KDE Heatmap ────────────────────────────────────────────────────
+  // autodarts: x=right, y=UP in board space
+  // Canvas: x=right, y=DOWN → flip y: canvasY = cy - t.y*R
   const RES   = 300;
   const grid  = new Float32Array(RES * RES);
-  const sigma = RES * 0.055;
+  const sigma = RES * 0.06;
   const r2    = Math.ceil(sigma * 3.5);
   const sig2  = 2 * sigma * sigma;
 
   throws.forEach(t => {
-    const gx = ((cx + t.x * R) / W) * RES;
-    const gy = ((cy - t.y * R) / H) * RES;
+    const canvasX = cx + t.x * R;
+    const canvasY = cy - t.y * R;  // correct: +y=up on board = -y on canvas
+    const gx = (canvasX / W) * RES;
+    const gy = (canvasY / H) * RES;
     const ix = Math.round(gx), iy = Math.round(gy);
     for (let dy = -r2; dy <= r2; dy++) {
       const ny = iy + dy; if (ny < 0 || ny >= RES) continue;

@@ -1088,8 +1088,8 @@ function computePlayerStats(match) {
     playerId: p.id, playerIndex: p.index, name: p.name, userId: p.userId || null,
     totalPoints: 0, totalTurns: 0, totalDarts: 0,
     legsWon: 0, setsWon: 0,
-    highestTurn: 0, turnsWith180: 0, turnsWith140plus: 0, turnsWith100plus: 0,
-    bust: 0, checkoutAttempts: 0, checkoutHits: 0,
+    highestTurn: 0, turnsWith180: 0, turnsWith140plus: 0, turnsWith100plus: 0, turnsWith60plus: 0,
+    bust: 0, realBust: 0, checkoutAttempts: 0, checkoutHits: 0,
     effDoubleAttempts: 0, effDoubleHits: 0,
     effDoubleOnSeq: false,
     first9Darts: [], checkoutRoutes: [], segmentHits: {},
@@ -1113,11 +1113,18 @@ function computePlayerStats(match) {
       const pts = turn.points || 0;
       s.totalPoints += pts; s.totalTurns += 1;
       s.totalDarts  += (turn.throws || []).length;
-      if (turn.busted) s.bust += 1;
+      if (turn.busted) {
+        s.bust += 1;
+        // Real bust = score before was NOT a direct double opportunity
+        const scoreBefore2 = turn.score + pts;
+        const wasOnDouble = scoreBefore2 > 0 && scoreBefore2 <= 50 && scoreBefore2 % 2 === 0;
+        if (!wasOnDouble) s.realBust += 1;
+      }
       if (pts > s.highestTurn) s.highestTurn = pts;
       if (pts === 180) s.turnsWith180    += 1;
       if (pts >= 140)  s.turnsWith140plus += 1;
       if (pts >= 100)  s.turnsWith100plus += 1;
+      if (pts >= 60)   s.turnsWith60plus  += 1;
 
       // ── Checkout & Effektive Doppelquote: count per THROW ────────
       const scoreBefore = turn.score + pts;
@@ -1365,7 +1372,8 @@ function renderOverviewTab() {
   const f9     = stats.reduce((a,s)=>a+s.first9Avg,0)/stats.length;
   const coAvg  = stats.reduce((a,s)=>a+s.checkoutPct,0)/stats.length;
   const t180   = stats.reduce((a,s)=>a+s.turnsWith180,0);
-  const busts  = stats.reduce((a,s)=>a+s.bust,0);
+  const busts     = stats.reduce((a,s)=>a+s.bust,0);
+  const realBusts = stats.reduce((a,s)=>a+s.realBust,0);
   const best   = Math.max(...stats.map(s=>s.highestTurn));
   const winPct = (wins/stats.length*100).toFixed(0);
   const effAtt = stats.reduce((a,s)=>a+s.effDoubleAttempts,0);
@@ -1383,7 +1391,7 @@ function renderOverviewTab() {
     {label:'CHECKOUT%',   value: coAvg.toFixed(1)+'%',  color:'var(--yellow)'},
     {label:'EFF. DOPPEL', value: effPct.toFixed(1)+'%', sub:`${effHit}/${effAtt}`, color:'var(--green)'},
     {label:'180s',        value: t180,                  color:'var(--accent2)'},
-    {label:'BUSTS',       value: busts,                 color:'var(--muted)'},
+    {label:'BUSTS',       value: realBusts, sub:`${busts} gesamt`,    color:'var(--muted)'},
     {label:'HÖCHSTE',     value: best,                  color:'var(--yellow)'},
   ];
   document.getElementById('kpi-grid').innerHTML = kpis.map(k => `
@@ -1425,7 +1433,36 @@ function renderOverviewTab() {
   const bestAvgMatch  = stats.reduce((b,s) => s.avg3Dart > b.avg3Dart ? s : b, stats[0]);
   const bestF9Match   = stats.reduce((b,s) => s.first9Avg > b.first9Avg ? s : b, stats[0]);
   const bestCoMatch   = stats.reduce((b,s) => s.checkoutPct > b.checkoutPct ? s : b, stats[0]);
-  const bestEffMatch  = stats.reduce((b,s) => s.effDoublePct > b.effDoublePct ? s : b, stats[0]);
+  // Bestes Doppel – welches Doppel hat die höchste Trefferquote (mind. 3 Versuche)
+  const doubleMap = {};
+  RAW.forEach(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return;
+    (match.games||[]).forEach(game => {
+      (game.turns||[]).forEach(turn => {
+        if (turn.playerId !== me.id) return;
+        let running = turn.score + turn.points;
+        (turn.throws||[]).forEach(th => {
+          const seg  = th.segment?.name || '';
+          const mult = th.segment?.multiplier ?? 1;
+          const pts  = segScore(th.segment||{});
+          const isDouble = mult === 2 || seg === 'Bull';
+          const canDbl   = running > 0 && running <= 50 && running % 2 === 0;
+          if (isDouble && canDbl) {
+            if (!doubleMap[seg]) doubleMap[seg] = {attempts:0, hits:0};
+            doubleMap[seg].attempts++;
+            if (running - pts === 0) doubleMap[seg].hits++;
+          }
+          running -= pts;
+          if (running < 0) running += pts;
+        });
+      });
+    });
+  });
+  const bestDouble = Object.entries(doubleMap)
+    .filter(([,d]) => d.attempts >= 3)
+    .map(([seg,d]) => ({seg, pct: d.hits/d.attempts*100, hits:d.hits, attempts:d.attempts}))
+    .sort((a,b) => b.pct - a.pct)[0];
   const best180Match  = stats.reduce((b,s) => s.turnsWith180 > b.turnsWith180 ? s : b, stats[0]);
 
   // Bestes Leg (wenigste Darts) – aus RAW
@@ -1440,7 +1477,23 @@ function renderOverviewTab() {
     });
   });
 
-  // Höchster Finish
+  // Meiste 60+ in einem einzelnen Leg
+  let best60inLeg = 0, best60LegDate = '';
+  let best100inLeg = 0, best100LegDate = '';
+  RAW.forEach(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return;
+    (match.games||[]).forEach(game => {
+      let count60 = 0, count100 = 0;
+      (game.turns||[]).forEach(turn => {
+        if (turn.playerId !== me.id || turn.busted) return;
+        if (turn.points >= 60)  count60++;
+        if (turn.points >= 100) count100++;
+      });
+      if (count60  > best60inLeg)  { best60inLeg  = count60;  best60LegDate  = match.finishedAt?.slice(0,10)||''; }
+      if (count100 > best100inLeg) { best100inLeg = count100; best100LegDate = match.finishedAt?.slice(0,10)||''; }
+    });
+  });
   let bestFinish = 0, bestFinishDate = '';
   RAW.forEach(match => {
     const me = (match.players||[]).find(p => (p.userId||p.name) === key);
@@ -1458,10 +1511,14 @@ function renderOverviewTab() {
     { label:'BESTER AVG',      value: bestAvgMatch.avg3Dart.toFixed(2),     date: bestAvgMatch.matchDate?.slice(0,10),     color:'var(--accent)' },
     { label:'BESTER FIRST-9',  value: bestF9Match.first9Avg.toFixed(1),     date: bestF9Match.matchDate?.slice(0,10),      color:'var(--mauve)' },
     { label:'BESTER CHECKOUT', value: bestCoMatch.checkoutPct.toFixed(1)+'%',date: bestCoMatch.matchDate?.slice(0,10),     color:'var(--yellow)' },
-    { label:'BESTES DOPPEL',   value: bestEffMatch.effDoublePct.toFixed(1)+'%',date: bestEffMatch.matchDate?.slice(0,10),  color:'var(--green)' },
+    { label:'BESTES DOPPEL',   value: bestDouble ? `${bestDouble.seg} · ${bestDouble.pct.toFixed(0)}%` : '—',
+      sub: bestDouble ? `${bestDouble.hits}/${bestDouble.attempts} Versuche` : '',
+      date: '', color:'var(--green)' },
     { label:'MEISTE 180s',     value: best180Match.turnsWith180,             date: best180Match.matchDate?.slice(0,10),    color:'var(--accent2)' },
     { label:'BESTES LEG',      value: bestLegDarts < 999 ? bestLegDarts+' Darts' : '—', date: bestLegDate,               color:'var(--green)' },
     { label:'HÖCHSTER FINISH', value: bestFinish > 0 ? bestFinish : '—',    date: bestFinishDate,                          color:'var(--yellow)' },
+    { label:'MEISTE 60+ / LEG',value: best60inLeg > 0 ? best60inLeg+'×' : '—', date: best60LegDate,                      color:'var(--accent)' },
+    { label:'MEISTE 100+ / LEG',value: best100inLeg > 0 ? best100inLeg+'×' : '—', date: best100LegDate,                  color:'var(--mauve)' },
     { label:'LÄNGSTER STREAK', value: bestWin + ' Siege',                   date: '',                                      color:'var(--green)' },
   ];
 
@@ -1471,6 +1528,7 @@ function renderOverviewTab() {
         <div class="best-card" style="border-top-color:${b.color}">
           <div class="best-card-label">${b.label}</div>
           <div class="best-card-value" style="color:${b.color}">${b.value}</div>
+          ${b.sub  ? `<div class="best-card-date">${b.sub}</div>`  : ''}
           ${b.date ? `<div class="best-card-date">${b.date}</div>` : ''}
         </div>`).join('')}
     </div>`;
@@ -1487,7 +1545,7 @@ function renderOverviewTab() {
       <td>${s.checkoutPct.toFixed(1)}%</td>
       <td style="color:${effDblColor(s.effDoublePct)}">${s.effDoublePct.toFixed(1)}%</td>
       <td>${s.turnsWith180}</td>
-      <td>${s.bust}</td>
+      <td title="Echte Überwerfer / Gesamt">${s.realBust}<span style="color:var(--muted);font-size:12px;"> /${s.bust}</span></td>
     </tr>`).join('');
 }
 
@@ -1537,7 +1595,7 @@ function renderMatchesTab() {
       <td>${s.turnsWith180}</td>
       <td>${s.turnsWith140plus}</td>
       <td>${s.turnsWith100plus}</td>
-      <td>${s.bust}</td>
+      <td title="Echte Überwerfer / Gesamt">${s.realBust}<span style="color:var(--muted);font-size:12px;"> /${s.bust}</span></td>
       <td>${s.isWinner ? '<span class="win-badge">SIEG</span>' : '<span class="loss-badge">NIEDERLAGE</span>'}</td>
     </tr>`).join('');
 

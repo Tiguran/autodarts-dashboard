@@ -408,6 +408,85 @@
     padding:8px 0 4px; border-bottom:2px solid var(--border2); margin-bottom:12px;
   }
 
+  /* ── DONUT CHART ── */
+  .donut-wrap { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+  .donut-legend { display:flex; flex-direction:column; gap:8px; font-family:var(--font-mono); font-size:13px; }
+  .donut-legend-item { display:flex; align-items:center; gap:8px; }
+  .donut-legend-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+
+  /* ── CHECKOUT GRID ── */
+  .checkout-grid { display:grid; grid-template-columns:repeat(10,1fr); gap:3px; margin-bottom:20px; }
+  .checkout-cell {
+    aspect-ratio:1; border-radius:3px; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:10px; font-weight:bold; cursor:default;
+    transition:transform 0.1s;
+  }
+  .checkout-cell:hover { transform:scale(1.15); z-index:10; }
+
+  /* ── DOUBLE GRID ── */
+  .double-eff-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:20px; }
+  .double-eff-cell {
+    border-radius:6px; padding:10px 6px; text-align:center;
+    font-family:var(--font-mono); border:1px solid var(--border);
+  }
+  .double-eff-name { font-family:var(--font-head); font-size:13px; margin-bottom:4px; }
+  .double-eff-pct  { font-size:18px; font-weight:bold; font-family:var(--font-head); }
+  .double-eff-sub  { font-size:11px; color:var(--muted); margin-top:2px; }
+
+  /* ── PRESSURE CHART ── */
+  .pressure-bars { display:flex; gap:16px; align-items:flex-end; height:120px; margin:16px 0; }
+  .pressure-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; height:100%; }
+  .pressure-bar-inner { flex:1; display:flex; align-items:flex-end; width:100%; }
+  .pressure-bar { width:100%; border-radius:4px 4px 0 0; min-height:4px; transition:height 0.4s; display:flex; align-items:center; justify-content:center; }
+  .pressure-bar-label { font-family:var(--font-mono); font-size:12px; color:var(--muted); margin-top:6px; text-align:center; }
+
+  /* ── SESSION CARDS ── */
+  .session-card { background:var(--bg1); border:1px solid var(--border); border-radius:6px; padding:14px 16px; margin-bottom:12px; }
+  .session-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-family:var(--font-mono); font-size:12px; color:var(--muted); }
+  .session-matches { display:flex; gap:6px; flex-wrap:wrap; }
+  .session-match-dot { padding:4px 10px; border-radius:3px; font-family:var(--font-mono); font-size:12px; background:var(--bg2); border:1px solid var(--border); }
+
+  /* ── CHECKOUT TRAINER ── */
+  .checkout-trainer-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:13px; }
+  .checkout-trainer-table td { padding:6px 10px; border-bottom:1px solid var(--border); }
+  .checkout-trainer-table tr:hover td { background:var(--bg2); }
+
+  /* ── LEG OPENING ── */
+  .leg-opening-row { display:flex; align-items:center; gap:10px; padding:5px 0; border-bottom:1px solid var(--border); font-family:var(--font-mono); font-size:13px; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    nav { padding:0 8px; }
+    nav button { padding:10px 10px; font-size:11px; letter-spacing:0; }
+    .tab-content { padding:16px 12px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap:8px; }
+    .kpi { padding:12px; }
+    .kpi-value { font-size:22px; }
+    .bests-grid { grid-template-columns: repeat(2, 1fr); }
+    .data-table { font-size:12px; }
+    .data-table td, .data-table th { padding:6px 8px; }
+    .filter-row { flex-wrap:wrap; gap:6px; }
+    .double-eff-grid { grid-template-columns:repeat(4,1fr); }
+    .checkout-grid { grid-template-columns:repeat(8,1fr); }
+    .section-head { font-size:11px; }
+    header { padding:12px 16px; }
+    header h1 { font-size:16px; }
+    .heatmap-wrap { max-width:100%; }
+    .dart-pos-grid { grid-template-columns:1fr; }
+    .compare-grid { grid-template-columns:1fr; }
+  }
+  @media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .bests-grid { grid-template-columns: 1fr 1fr; }
+    nav button { padding:8px 8px; font-size:10px; }
+  }
+
+  /* ── FALLEN SCORES ── */
+  .fallen-score-card { background:var(--bg1); border:1px solid var(--border); border-left:4px solid var(--red); border-radius:4px; padding:12px 16px; margin-bottom:8px; }
+  .fallen-score-num  { font-family:var(--font-head); font-size:22px; color:var(--red); float:left; margin-right:12px; }
+  .fallen-score-tip  { font-family:var(--font-mono); font-size:13px; color:var(--text); line-height:1.6; }
+  .fallen-score-target { color:var(--accent); font-weight:bold; }
+
   /* ── STREAK ── */
   .streak-card {
     background:var(--bg1); border:1px solid var(--border); border-radius:6px;
@@ -654,6 +733,8 @@
     <span id="user-info" style="font-family:var(--font-mono);font-size:13px;color:var(--muted);display:none;"></span>
     <button class="btn btn-dim" id="reload-btn" style="display:none;" onclick="resetApp()">↺ NEU LADEN</button>
     <button class="btn btn-dim" id="sync-btn" style="display:none;" onclick="syncFromSupabase()">☁ SYNC</button>
+    <button class="btn btn-dim" id="pdf-btn" style="display:none;" onclick="exportPDF()" title="Übersicht als PDF exportieren">📄 PDF</button>
+    <button class="btn btn-dim" id="autorefresh-btn" style="display:none;" onclick="toggleAutoRefresh()" title="Alle 5 Minuten automatisch aktualisieren">🔄 AUTO</button>
     <button class="btn btn-dim" id="logout-btn" style="display:none;" onclick="authLogout()">ABMELDEN</button>
     <button class="btn btn-dim" onclick="toggleSettings()">⚙ DESIGN</button>
   </div>
@@ -814,6 +895,21 @@
     </div>
     <div class="kpi-grid" id="kpi-grid"></div>
     <div id="streak-row" style="margin-bottom:24px;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;flex-wrap:wrap;">
+      <div>
+        <div class="section-head">SCORING-EFFIZIENZ</div>
+        <div style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:16px;">
+          <div class="donut-wrap">
+            <canvas id="ov-donut" width="130" height="130"></canvas>
+            <div class="donut-legend" id="ov-donut-legend"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-head">LEG-ERÖFFNUNG</div>
+        <div id="ov-leg-opening" style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:16px;"></div>
+      </div>
+    </div>
     <div class="section-head">PERSÖNLICHE BESTLEISTUNGEN</div>
     <div id="personal-bests" style="margin-bottom:28px;"></div>
     <div class="section-head">LETZTE 10 MATCHES</div>
@@ -1039,6 +1135,10 @@
       <select id="co-player"></select>
       <button class="btn btn-dim" onclick="renderCheckoutsTab()">AKTUALISIEREN</button>
     </div>
+    <div class="section-head">CHECKOUT-SCORE MAP (1-170)</div>
+    <div id="co-score-map" style="margin-bottom:28px;"></div>
+    <div class="section-head">DOPPEL-EFFIZIENZ (pro Dart)</div>
+    <div id="co-double-grid" style="margin-bottom:28px;"></div>
     <div class="section-head">TOP CHECKOUT-WEGE</div>
     <div class="checkout-grid" id="checkout-grid"></div>
     <div class="section-head" style="margin-top:32px;">ALLE CHECKOUTS</div>
@@ -1309,6 +1409,8 @@ function initApp(filename, count) {
   // Show sync button if logged into Supabase
   if (currentUser) {
     document.getElementById('sync-btn').style.display = '';
+    document.getElementById('pdf-btn').style.display = '';
+    document.getElementById('autorefresh-btn').style.display = '';
   }
 
   populateSelects();
@@ -1401,7 +1503,89 @@ function renderOverviewTab() {
       ${k.sub ? `<div class="kpi-sub">${k.sub}</div>` : ''}
     </div>`).join('');
 
-  // ── Streak ──────────────────────────────────────────────────────────
+  // ── Scoring-Effizienz Donut ──────────────────────────────────────────
+  const allTurns = stats.flatMap(s => {
+    const m = RAW.find(r => r.id === s.matchId);
+    if (!m) return [];
+    const me = (m.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return [];
+    return (m.games||[]).flatMap(g => (g.turns||[]).filter(t => t.playerId === me.id && !t.busted).map(t => t.points));
+  });
+  const buckets = [
+    {label:'<40',   color:'#ff3355', count: allTurns.filter(p=>p<40).length},
+    {label:'40-59', color:'#ffd600', count: allTurns.filter(p=>p>=40&&p<60).length},
+    {label:'60-99', color:'#00e5ff', count: allTurns.filter(p=>p>=60&&p<100).length},
+    {label:'100+',  color:'#00ff88', count: allTurns.filter(p=>p>=100).length},
+  ];
+  const totalTurns = allTurns.length || 1;
+  const donutC = document.getElementById('ov-donut');
+  if (donutC) {
+    donutC.width = 130; donutC.height = 130;
+    const ctx = donutC.getContext('2d');
+    const cx=65, cy=65, R=55, r=32;
+    let angle = -Math.PI/2;
+    buckets.forEach(b => {
+      const slice = (b.count/totalTurns) * 2*Math.PI;
+      ctx.beginPath(); ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,R,angle,angle+slice);
+      ctx.closePath(); ctx.fillStyle=b.color; ctx.fill();
+      angle += slice;
+    });
+    // Hole
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim() || '#0e1117';
+    ctx.fill();
+    // Center text
+    ctx.fillStyle='#c8d8e8'; ctx.font='bold 13px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(totalTurns+'T', cx, cy);
+  }
+  const legendEl = document.getElementById('ov-donut-legend');
+  if (legendEl) legendEl.innerHTML = buckets.map(b=>`
+    <div class="donut-legend-item">
+      <div class="donut-legend-dot" style="background:${b.color};"></div>
+      <span style="color:${b.color};">${b.label}</span>
+      <span style="color:var(--muted);">${(b.count/totalTurns*100).toFixed(0)}%</span>
+    </div>`).join('');
+
+  // ── Leg-Opening Analyse ──────────────────────────────────────────────
+  const legOpenings = [];
+  RAW.forEach(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return;
+    (match.games||[]).forEach(game => {
+      const firstTurn = (game.turns||[]).find(t => t.playerId === me.id);
+      if (!firstTurn) return;
+      legOpenings.push({pts: firstTurn.points, won: game.winnerPlayerId === me.id, date: match.finishedAt?.slice(0,10)||''});
+    });
+  });
+  const legOpenEl = document.getElementById('ov-leg-opening');
+  if (legOpenEl && legOpenings.length) {
+    const avg60   = legOpenings.filter(l=>l.pts>=60).length;
+    const avg100  = legOpenings.filter(l=>l.pts>=100).length;
+    const wonWith60  = legOpenings.filter(l=>l.pts>=60&&l.won).length;
+    const wonWith60t = legOpenings.filter(l=>l.pts>=60).length||1;
+    const wonWithout60  = legOpenings.filter(l=>l.pts<60&&l.won).length;
+    const wonWithout60t = legOpenings.filter(l=>l.pts<60).length||1;
+    const avgOpen = legOpenings.reduce((a,l)=>a+l.pts,0)/legOpenings.length;
+    legOpenEl.innerHTML = `
+      <div style="font-family:var(--font-mono);font-size:13px;margin-bottom:10px;">
+        Ø Eröffnung: <span style="color:var(--accent);font-weight:bold;">${avgOpen.toFixed(1)}</span> ·
+        60+: <span style="color:var(--yellow);">${avg60}×</span> ·
+        100+: <span style="color:var(--green);">${avg100}×</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div style="background:var(--bg2);border-radius:4px;padding:10px;text-align:center;">
+          <div style="font-size:12px;color:var(--muted);">Win-Rate MIT 60+</div>
+          <div style="font-family:var(--font-head);font-size:22px;color:var(--green);">${(wonWith60/wonWith60t*100).toFixed(0)}%</div>
+          <div style="font-size:11px;color:var(--muted);">${wonWith60}/${wonWith60t} Legs</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:4px;padding:10px;text-align:center;">
+          <div style="font-size:12px;color:var(--muted);">Win-Rate OHNE 60+</div>
+          <div style="font-family:var(--font-head);font-size:22px;color:var(--red);">${(wonWithout60/wonWithout60t*100).toFixed(0)}%</div>
+          <div style="font-size:11px;color:var(--muted);">${wonWithout60}/${wonWithout60t} Legs</div>
+        </div>
+      </div>`;
+  }
   const sorted = [...stats].sort((a,b) => (a.matchDate||'').localeCompare(b.matchDate||''));
   let curStreak = 0, curType = null, bestWin = 0, bestLoss = 0, cur = 0;
   sorted.forEach(s => {
@@ -1433,7 +1617,7 @@ function renderOverviewTab() {
   const bestAvgMatch  = stats.reduce((b,s) => s.avg3Dart > b.avg3Dart ? s : b, stats[0]);
   const bestF9Match   = stats.reduce((b,s) => s.first9Avg > b.first9Avg ? s : b, stats[0]);
   const bestCoMatch   = stats.reduce((b,s) => s.checkoutPct > b.checkoutPct ? s : b, stats[0]);
-  // Bestes Doppel – welches Doppel hat die höchste Trefferquote (mind. 3 Versuche)
+  // Bestes Doppel – pro einzelnem Dart bewertet (nicht pro Turn)
   const doubleMap = {};
   RAW.forEach(match => {
     const me = (match.players||[]).find(p => (p.userId||p.name) === key);
@@ -1446,12 +1630,18 @@ function renderOverviewTab() {
           const seg  = th.segment?.name || '';
           const mult = th.segment?.multiplier ?? 1;
           const pts  = segScore(th.segment||{});
-          const isDouble = mult === 2 || seg === 'Bull';
-          const canDbl   = running > 0 && running <= 50 && running % 2 === 0;
-          if (isDouble && canDbl) {
-            if (!doubleMap[seg]) doubleMap[seg] = {attempts:0, hits:0};
-            doubleMap[seg].attempts++;
+          // Jeder einzelne Dart auf ein Doppelfeld zählt als Versuch
+          const isDouble = (seg.startsWith('D') || seg === 'Bull') && mult > 0;
+          const isCheckoutRange = running > 0 && running <= 50 && running % 2 === 0;
+          if (isDouble && isCheckoutRange) {
+            if (!doubleMap[seg]) doubleMap[seg] = {darts:0, hits:0};
+            doubleMap[seg].darts++;
             if (running - pts === 0) doubleMap[seg].hits++;
+          }
+          // Miss auf Doppelfeld ebenfalls als Versuch werten
+          const isMiss = mult === 0;
+          if (isMiss && isCheckoutRange) {
+            // Wir wissen nicht welches Doppel gemeint war – überspringen
           }
           running -= pts;
           if (running < 0) running += pts;
@@ -1460,8 +1650,8 @@ function renderOverviewTab() {
     });
   });
   const bestDouble = Object.entries(doubleMap)
-    .filter(([,d]) => d.attempts >= 3)
-    .map(([seg,d]) => ({seg, pct: d.hits/d.attempts*100, hits:d.hits, attempts:d.attempts}))
+    .filter(([,d]) => d.darts >= 3)
+    .map(([seg,d]) => ({seg, pct: d.hits/d.darts*100, hits:d.hits, darts:d.darts}))
     .sort((a,b) => b.pct - a.pct)[0];
   const best180Match  = stats.reduce((b,s) => s.turnsWith180 > b.turnsWith180 ? s : b, stats[0]);
 
@@ -1512,7 +1702,7 @@ function renderOverviewTab() {
     { label:'BESTER FIRST-9',  value: bestF9Match.first9Avg.toFixed(1),     date: bestF9Match.matchDate?.slice(0,10),      color:'var(--mauve)' },
     { label:'BESTER CHECKOUT', value: bestCoMatch.checkoutPct.toFixed(1)+'%',date: bestCoMatch.matchDate?.slice(0,10),     color:'var(--yellow)' },
     { label:'BESTES DOPPEL',   value: bestDouble ? `${bestDouble.seg} · ${bestDouble.pct.toFixed(0)}%` : '—',
-      sub: bestDouble ? `${bestDouble.hits}/${bestDouble.attempts} Versuche` : '',
+      sub: bestDouble ? `${bestDouble.hits}/${bestDouble.darts} Darts` : '',
       date: '', color:'var(--green)' },
     { label:'MEISTE 180s',     value: best180Match.turnsWith180,             date: best180Match.matchDate?.slice(0,10),    color:'var(--accent2)' },
     { label:'BESTES LEG',      value: bestLegDarts < 999 ? bestLegDarts+' Darts' : '—', date: bestLegDate,               color:'var(--green)' },
@@ -2375,6 +2565,71 @@ function renderLegsTab() {
 function renderCheckoutsTab() {
   const key   = selectedPlayer('co-player');
   const stats = getStatsFor(key);
+
+  // ── Checkout Score Map ────────────────────────────────────────────────
+  const scoreMap = document.getElementById('co-score-map');
+  if (scoreMap) {
+    const scoreStats = {};
+    RAW.forEach(match => {
+      const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+      if (!me) return;
+      (match.games||[]).forEach(game => {
+        (game.turns||[]).forEach(turn => {
+          if (turn.playerId !== me.id) return;
+          const sb = turn.score + turn.points;
+          if (sb >= 2 && sb <= 170) {
+            if (!scoreStats[sb]) scoreStats[sb] = {seen:0,checkout:0};
+            scoreStats[sb].seen++;
+            if (turn.score === 0) scoreStats[sb].checkout++;
+          }
+        });
+      });
+    });
+    const cells = Array.from({length:170},(_,i)=>i+1).map(s => {
+      const d = scoreStats[s];
+      const pct = d && d.seen>0 ? d.checkout/d.seen : null;
+      const odd = s%2!==0 && s>1 && s<50;
+      const bg    = odd?'var(--bg2)':pct===null?'var(--bg2)':pct>=0.5?'rgba(0,255,136,0.25)':pct>=0.2?'rgba(255,214,0,0.25)':'rgba(255,51,85,0.25)';
+      const color = odd?'var(--border2)':pct===null?'var(--muted)':pct>=0.5?'var(--green)':pct>=0.2?'var(--yellow)':'var(--red)';
+      const tip   = odd?`${s}: ungerade`:pct===null?`${s}: nie versucht`:`${s}: ${(pct*100).toFixed(0)}% (${d.checkout}/${d.seen})`;
+      return `<div class="checkout-cell" style="background:${bg};color:${color};font-size:11px;" title="${tip}">${s}</div>`;
+    }).join('');
+    scoreMap.innerHTML = `<div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:8px;">🟢 ≥50% · 🟡 20-49% · 🔴 &lt;20% · Grau = ungerade/nie versucht</div><div style="display:grid;grid-template-columns:repeat(17,1fr);gap:3px;">${cells}</div>`;
+  }
+
+  // ── Doppel-Effizienz Grid ─────────────────────────────────────────────
+  const doubleGridEl = document.getElementById('co-double-grid');
+  if (doubleGridEl) {
+    const allDoubles = ['D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','D14','D15','D16','D17','D18','D19','D20','Bull'];
+    const dblMap = {}; allDoubles.forEach(d => dblMap[d] = {darts:0,hits:0});
+    RAW.forEach(match => {
+      const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+      if (!me) return;
+      (match.games||[]).forEach(game => {
+        (game.turns||[]).forEach(turn => {
+          if (turn.playerId !== me.id) return;
+          let running = turn.score + turn.points;
+          (turn.throws||[]).forEach(th => {
+            const seg=th.segment?.name||'', mult=th.segment?.multiplier??1, pts=segScore(th.segment||{});
+            const isDbl=(seg.startsWith('D')||seg==='Bull')&&mult>0;
+            const inRange=running>0&&running<=50&&running%2===0;
+            if (isDbl&&inRange&&dblMap[seg]) { dblMap[seg].darts++; if(running-pts===0) dblMap[seg].hits++; }
+            running-=pts; if(running<0) running+=pts;
+          });
+        });
+      });
+    });
+    doubleGridEl.innerHTML = '<div class="double-eff-grid">'+allDoubles.map(seg=>{
+      const d=dblMap[seg], pct=d.darts>0?d.hits/d.darts*100:null;
+      const color=pct===null?'var(--muted)':pct>=50?'var(--green)':pct>=25?'var(--yellow)':'var(--red)';
+      const bg=pct===null?'var(--bg2)':pct>=50?'rgba(0,255,136,0.1)':pct>=25?'rgba(255,214,0,0.1)':'rgba(255,51,85,0.1)';
+      return `<div class="double-eff-cell" style="background:${bg};border-color:${color};">
+        <div class="double-eff-name" style="color:${color};">${seg}</div>
+        <div class="double-eff-pct" style="color:${color};">${pct!==null?pct.toFixed(0)+'%':'—'}</div>
+        <div class="double-eff-sub">${d.darts>0?d.hits+'/'+d.darts+' Darts':'—'}</div></div>`;
+    }).join('')+'</div>';
+  }
+
   const all   = stats.flatMap(s=>s.checkoutDetails);
 
   // Top routes
@@ -2812,6 +3067,21 @@ function setPeriod(days, btn) {
 
 document.getElementById('tr-player')?.addEventListener('change', renderTrainingTab);
 
+// Extend renderTrainingTab with new sections
+const _origRenderTrainingTab = renderTrainingTab;
+renderTrainingTab = function() {
+  _origRenderTrainingTab();
+  const key = selectedPlayer('tr-player');
+  const container = document.getElementById('tr-content');
+  if (!container || !key) return;
+  setTimeout(() => {
+    renderPressureAnalysis(key, container);
+    renderFallenScores(key, container);
+    renderLearningCurve(key, container);
+    renderCheckoutTrainer(key, container);
+  }, 200);
+};
+
 // ═══════════════════════════════════════════════════════════════════════
 // MATCH DETAIL MODAL
 // ═══════════════════════════════════════════════════════════════════════
@@ -3214,37 +3484,38 @@ function _drawDarts(canvas, throws, mode, size) {
   const ctx = canvas.getContext('2d');
   const cx=size/2, cy=size/2, R=size/2-4;
   ctx.clearRect(0,0,size,size);
-  if (mode==='heat') return;
-  const r = Math.max(2.5, 4*(size/500));
-  throws.forEach(t=>{
-    const px=cx+t.x*R, py=cy-t.y*R;
-    let color;
-    if(t.seg==='Bull')color='#00ff88';
-    else if(t.seg==='25')color='#a6e3a1';
-    else if(t.mult===3)color='#00e5ff';
-    else if(t.mult===2)color='#ffd600';
-    else color='rgba(180,200,220,0.85)';
-    if(t.busted)color='#ff3355';
+  if (!throws.length) return;
 
-    // Outer glow
-    ctx.shadowColor=color; ctx.shadowBlur=16;
-    ctx.beginPath(); ctx.arc(px,py,r*1.4,0,2*Math.PI);
-    ctx.fillStyle=color; ctx.fill();
-
-    // Core glow
-    ctx.shadowBlur=8;
-    ctx.beginPath(); ctx.arc(px,py,r,0,2*Math.PI);
-    ctx.fillStyle=color; ctx.fill();
-
-    // Bright center
-    ctx.shadowBlur=0;
-    ctx.beginPath(); ctx.arc(px,py,r*0.5,0,2*Math.PI);
-    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
-
-    // Tiny black dot
-    ctx.beginPath(); ctx.arc(px,py,Math.max(0.8,r*0.2),0,2*Math.PI);
-    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fill();
+  // KDE Heatmap – same as main heatmap tab
+  const RES=200, sigma=RES*0.055, r2=Math.ceil(sigma*3.5), sig2=2*sigma*sigma;
+  const grid=new Float32Array(RES*RES);
+  throws.forEach(t => {
+    const gx=((cx+t.x*R)/size)*RES, gy=((cy-t.y*R)/size)*RES;
+    const ix=Math.round(gx), iy=Math.round(gy);
+    for(let dy=-r2;dy<=r2;dy++){const ny=iy+dy;if(ny<0||ny>=RES)continue;
+      for(let dx=-r2;dx<=r2;dx++){const nx=ix+dx;if(nx<0||nx>=RES)continue;
+        grid[ny*RES+nx]+=Math.exp(-(dx*dx+dy*dy)/sig2);}}
   });
+  let maxVal=0; for(let i=0;i<grid.length;i++) if(grid[i]>maxVal) maxVal=grid[i];
+  if(maxVal===0) return;
+
+  const imgData=ctx.createImageData(size,size);
+  const sx=RES/size, sy=RES/size;
+  for(let py=0;py<size;py++){for(let px=0;px<size;px++){
+    const v=grid[Math.floor(py*sy)*RES+Math.floor(px*sx)]/maxVal;
+    let r=0,g=0,b=0,a=0;
+    if(v>0.003){
+      if(v<0.06){const t=v/0.06;b=Math.round(180*t);a=Math.round(t*150);}
+      else if(v<0.2){const t=(v-0.06)/0.14;r=Math.round(30*t);g=Math.round(100*t);b=Math.round(180+30*t);a=Math.round(150+50*t);}
+      else if(v<0.4){const t=(v-0.2)/0.2;r=Math.round(30-20*t);g=Math.round(100+120*t);b=Math.round(210-110*t);a=200;}
+      else if(v<0.6){const t=(v-0.4)/0.2;r=Math.round(10+240*t);g=Math.round(220+20*t);b=Math.round(100-90*t);a=210;}
+      else if(v<0.8){const t=(v-0.6)/0.2;r=255;g=Math.round(240-100*t);b=10;a=215;}
+      else{const t=(v-0.8)/0.2;r=255;g=Math.round(140-80*t);b=10;a=220+Math.round(35*t);}
+    }
+    const idx=(py*size+px)*4;
+    imgData.data[idx]=r;imgData.data[idx+1]=g;imgData.data[idx+2]=b;imgData.data[idx+3]=a;
+  }}
+  ctx.putImageData(imgData,0,0);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -3838,8 +4109,388 @@ document.getElementById('da-match')?.addEventListener('change', renderDartsTab);
 document.getElementById('da-view')?.addEventListener('change', renderDartsTab);
 
 // ═══════════════════════════════════════════════════════════════════════
-// GEGNER-DATENBANK
+// RUNDEN-ANALYSE + SESSION-ANALYSE
 // ═══════════════════════════════════════════════════════════════════════
+
+function renderRoundsTab() {
+  const key = selectedPlayer('rd-player');
+  const el  = document.getElementById('rd-content');
+  if (!el) return;
+
+  const stats = getStatsFor(key);
+  if (!stats.length) { el.innerHTML = '<div class="no-data">Keine Daten</div>'; return; }
+
+  // ── Win-Rate nach Leg-Anzahl ─────────────────────────────────────────
+  const byLegCount = {};
+  RAW.forEach(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return;
+    const total = (match.games||[]).length;
+    const won   = (match.games||[]).filter(g => g.winnerPlayerId === me.id).length;
+    if (!byLegCount[total]) byLegCount[total] = {matches:0, wins:0};
+    byLegCount[total].matches++;
+    if (won > total/2) byLegCount[total].wins++;
+  });
+
+  const legRows = Object.entries(byLegCount).sort((a,b)=>parseInt(a)-parseInt(b)).map(([legs,d]) => `
+    <tr>
+      <td>${legs} Legs</td>
+      <td>${d.matches}</td>
+      <td style="color:${d.wins/d.matches>=0.5?'var(--green)':'var(--red)'};">${(d.wins/d.matches*100).toFixed(0)}%</td>
+      <td>${d.wins}/${d.matches}</td>
+    </tr>`).join('');
+
+  // ── Session-Erkennung (< 2h Abstand = gleiche Session) ───────────────
+  const sortedMatches = [...RAW]
+    .filter(m => (m.players||[]).some(p => (p.userId||p.name) === key))
+    .sort((a,b) => (a.finishedAt||'').localeCompare(b.finishedAt||''));
+
+  const sessions = [];
+  let curSession = [];
+  sortedMatches.forEach((match, i) => {
+    if (i === 0) { curSession = [match]; return; }
+    const prev = sortedMatches[i-1];
+    const diff = (new Date(match.finishedAt) - new Date(prev.finishedAt)) / 3600000;
+    if (diff <= 2) {
+      curSession.push(match);
+    } else {
+      if (curSession.length) sessions.push([...curSession]);
+      curSession = [match];
+    }
+  });
+  if (curSession.length) sessions.push(curSession);
+
+  const sessionHTML = sessions.map((sess, si) => {
+    const date    = sess[0].finishedAt?.slice(0,10) || '?';
+    const matchAvgs = sess.map(m => {
+      const me = (m.players||[]).find(p => (p.userId||p.name) === key);
+      if (!me) return null;
+      const turns = (m.games||[]).flatMap(g => (g.turns||[]).filter(t => t.playerId === me.id && !t.busted));
+      return turns.length ? turns.reduce((a,t)=>a+t.points,0)/turns.length : null;
+    }).filter(Boolean);
+
+    const maxAvg = Math.max(...matchAvgs, 1);
+    const dots = matchAvgs.map((avg, mi) => {
+      const h = Math.round(avg/maxAvg*40)+4;
+      const color = avg >= 45 ? 'var(--green)' : avg >= 35 ? 'var(--accent)' : 'var(--red)';
+      return `<div title="Match ${mi+1}: Ø${avg.toFixed(1)}" class="session-match-dot" style="color:${color};">
+        Ø${avg.toFixed(1)}
+      </div>`;
+    }).join('');
+
+    const sessAvg = matchAvgs.reduce((a,b)=>a+b,0)/matchAvgs.length;
+    const trend   = matchAvgs.length > 1 ? matchAvgs[matchAvgs.length-1] - matchAvgs[0] : 0;
+    const trendStr= trend > 1 ? `▲ +${trend.toFixed(1)}` : trend < -1 ? `▼ ${trend.toFixed(1)}` : '─ stabil';
+    const trendCol= trend > 1 ? 'var(--green)' : trend < -1 ? 'var(--red)' : 'var(--muted)';
+
+    return `
+      <div class="session-card">
+        <div class="session-header">
+          <span>SESSION ${si+1} · ${date} · ${sess.length} Matches</span>
+          <span>Ø ${sessAvg.toFixed(1)} · <span style="color:${trendCol}">${trendStr}</span></span>
+        </div>
+        <div class="session-matches">${dots}</div>
+      </div>`;
+  }).join('');
+
+  // ── Avg-Verlauf über alle Matches ────────────────────────────────────
+  const matchAvgList = sortedMatches.map(m => {
+    const me = (m.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return null;
+    const turns = (m.games||[]).flatMap(g => (g.turns||[]).filter(t => t.playerId === me.id && !t.busted));
+    return { avg: turns.length ? turns.reduce((a,t)=>a+t.points,0)/turns.length : 0, date: m.finishedAt?.slice(0,10)||'' };
+  }).filter(Boolean);
+
+  el.innerHTML = `
+    <div class="section-head">WIN-RATE NACH MATCH-LÄNGE</div>
+    <div style="overflow-x:auto;margin-bottom:28px;">
+      <table class="data-table">
+        <thead><tr><th>MATCH-TYP</th><th>GESPIELT</th><th>WIN %</th><th>W/L</th></tr></thead>
+        <tbody>${legRows}</tbody>
+      </table>
+    </div>
+
+    <div class="section-head">SESSION-ANALYSE (Matches &lt;2h Abstand = eine Session)</div>
+    <div style="margin-bottom:28px;">${sessionHTML || '<div class="no-data">Keine Sessions gefunden</div>'}</div>
+
+    <div class="section-head">AVG-VERLAUF ÜBER ALLE MATCHES</div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:20px;">
+      <canvas id="rd-avg-chart" height="150" style="width:100%;display:block;"></canvas>
+    </div>`;
+
+  setTimeout(() => {
+    const c = document.getElementById('rd-avg-chart');
+    if (!c || !matchAvgList.length) return;
+    c.width = c.parentElement.getBoundingClientRect().width - 32;
+    drawLine('rd-avg-chart',
+      matchAvgList.map(m => m.date),
+      matchAvgList.map(m => +m.avg.toFixed(1)),
+      'var(--accent)', 'Avg'
+    );
+  }, 50);
+}
+
+document.getElementById('rd-player')?.addEventListener('change', renderRoundsTab);
+
+// ═══════════════════════════════════════════════════════════════════════
+// DRUCK-ANALYSE, FALLEN-SCORES, LERNKURVE, CHECKOUT-TRAINER
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderPressureAnalysis(key, container) {
+  const normalTurns = [], pressureTurns = [];
+  const sorted = [...RAW]
+    .filter(m => (m.players||[]).some(p => (p.userId||p.name) === key))
+    .sort((a,b) => (a.finishedAt||'').localeCompare(b.finishedAt||''));
+
+  sorted.forEach(match => {
+    const me  = (match.players||[]).find(p => (p.userId||p.name) === key);
+    const opp = (match.players||[]).find(p => (p.userId||p.name) !== key);
+    if (!me || !opp) return;
+    let oppScore = 501;
+    (match.games||[]).forEach(game => {
+      (game.turns||[]).forEach(turn => {
+        if (turn.playerId === opp.id) { oppScore = turn.score; return; }
+        if (turn.playerId !== me.id || turn.busted) return;
+        (oppScore <= 100 ? pressureTurns : normalTurns).push(turn.points);
+      });
+    });
+  });
+
+  const normalAvg   = normalTurns.length   ? normalTurns.reduce((a,b)=>a+b,0)/normalTurns.length     : 0;
+  const pressureAvg = pressureTurns.length ? pressureTurns.reduce((a,b)=>a+b,0)/pressureTurns.length : 0;
+  const diff = pressureAvg - normalAvg;
+  const diffColor = diff >= 0 ? 'var(--green)' : 'var(--red)';
+  const maxBar = Math.max(normalAvg, pressureAvg, 1);
+
+  const pressureTrend = sorted.map(match => {
+    const me  = (match.players||[]).find(p => (p.userId||p.name) === key);
+    const opp = (match.players||[]).find(p => (p.userId||p.name) !== key);
+    if (!me || !opp) return null;
+    let oppScore = 501; const pts = [];
+    (match.games||[]).forEach(game => {
+      (game.turns||[]).forEach(turn => {
+        if (turn.playerId === opp.id) { oppScore = turn.score; return; }
+        if (turn.playerId !== me.id || turn.busted) return;
+        if (oppScore <= 100) pts.push(turn.points);
+      });
+    });
+    return pts.length ? { avg: pts.reduce((a,b)=>a+b,0)/pts.length, date: match.finishedAt?.slice(0,10) } : null;
+  }).filter(Boolean);
+
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <div class="section-head" style="margin-top:28px;">DRUCK-ANALYSE</div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:20px;margin-bottom:20px;">
+      <div style="display:flex;gap:20px;align-items:flex-end;height:100px;margin-bottom:16px;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;">
+          <div style="flex:1;display:flex;align-items:flex-end;width:100%;">
+            <div style="width:100%;height:${(normalAvg/maxBar*100).toFixed(0)}%;background:var(--accent);border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;min-height:20px;">
+              <span style="font-family:var(--font-head);font-size:14px;color:var(--bg);font-weight:bold;">${normalAvg.toFixed(1)}</span>
+            </div>
+          </div>
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-top:6px;">Normal<br><span style="font-size:11px;">${normalTurns.length} Turns</span></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;">
+          <div style="flex:1;display:flex;align-items:flex-end;width:100%;">
+            <div style="width:100%;height:${(pressureAvg/maxBar*100).toFixed(0)}%;background:${pressureAvg<normalAvg?'var(--red)':'var(--green)'};border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;min-height:20px;">
+              <span style="font-family:var(--font-head);font-size:14px;color:var(--bg);font-weight:bold;">${pressureAvg.toFixed(1)}</span>
+            </div>
+          </div>
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-top:6px;">Unter Druck<br><span style="font-size:11px;">${pressureTurns.length} Turns</span></div>
+        </div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-family:var(--font-head);font-size:28px;color:${diffColor};">${diff>=0?'+':''}${diff.toFixed(1)}</div>
+          <div style="font-size:12px;color:${diffColor};">${diff>0?'🟢 Besser':diff<-5?'🔴 Starker Einbruch':'🟡 Leichter Einbruch'}</div>
+        </div>
+      </div>
+      ${pressureTrend.length>2?`<div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:4px;">TREND: Druck-Avg pro Match</div><canvas id="pressure-trend-chart" height="70" style="width:100%;display:block;"></canvas>`:''}
+    </div>`;
+  container.appendChild(el);
+
+  if (pressureTrend.length > 2) {
+    setTimeout(() => {
+      const c = document.getElementById('pressure-trend-chart');
+      if (!c) return;
+      c.width = c.parentElement.getBoundingClientRect().width - 40;
+      drawLine('pressure-trend-chart', pressureTrend.map(p=>p.date), pressureTrend.map(p=>+p.avg.toFixed(1)), 'var(--red)', 'Druck-Avg');
+    }, 80);
+  }
+}
+
+function renderFallenScores(key, container) {
+  const scoreCounts = {};
+  RAW.forEach(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return;
+    (match.games||[]).forEach(game => {
+      (game.turns||[]).forEach(turn => {
+        if (turn.playerId !== me.id || turn.busted) return;
+        const s = turn.score;
+        if (s > 0 && s <= 50) scoreCounts[s] = (scoreCounts[s]||0)+1;
+      });
+    });
+  });
+
+  const TRICKS = {
+    1:'Kein direktes Doppel. Wirf S1 → dann D Bull (50).',
+    3:'Kein direktes Doppel. Wirf S3 → D Bull oder S1 → D1.',
+    5:'Kein direktes Doppel. Wirf S1 → D2 oder S5 → D Bull.',
+    7:'Kein direktes Doppel. Wirf S3 → D2 oder S7 → Bull.',
+    9:'Kein direktes Doppel. Wirf S1 → D4.',
+    11:'Kein direktes Doppel. Wirf S3 → D4 oder S7 → D2.',
+    13:'Kein direktes Doppel. Wirf S5 → D4 oder S1 → D6.',
+    15:'Kein direktes Doppel. Wirf S7 → D4 oder S3 → D6.',
+    17:'Kein direktes Doppel. Wirf S9 → D4 oder S1 → D8.',
+    19:'Kein direktes Doppel. Wirf S3 → D8 oder S11 → D4.',
+    21:'Kein direktes Doppel. Wirf S5 → D8 oder S1 → D10.',
+    23:'Kein direktes Doppel. Wirf S7 → D8 oder S3 → D10.',
+    25:'D25 (Bull) direkt möglich! Oder S5 → D10.',
+    29:'Kein direktes Doppel. Wirf S1 → D14 oder S9 → D10.',
+    31:'Kein direktes Doppel. Wirf S7 → D12 oder S3 → D14.',
+    37:'Kein direktes Doppel. Wirf S1 → D18 oder S5 → D16.',
+    39:'Kein direktes Doppel. Wirf S7 → D16 oder S3 → D18.',
+    41:'Kein direktes Doppel. Wirf S9 → D16 oder S1 → D20.',
+    45:'Kein direktes Doppel. Wirf S5 → D20 oder S13 → D16.',
+    47:'Kein direktes Doppel. Wirf S7 → D20 oder S15 → D16.',
+    49:'Kein direktes Doppel. Wirf S9 → D20 oder S17 → D16.',
+  };
+
+  const fallen = Object.entries(scoreCounts)
+    .filter(([s]) => TRICKS[parseInt(s)])
+    .sort((a,b) => b[1]-a[1]).slice(0,8);
+
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <div class="section-head" style="margin-top:28px;">FALLEN-SCORES</div>
+    <div style="margin-bottom:20px;">
+      ${fallen.length ? fallen.map(([score,cnt]) => `
+        <div class="fallen-score-card">
+          <div class="fallen-score-num">${score}</div>
+          <div style="overflow:hidden;">
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:3px;">${cnt}× gelandet</div>
+            <div class="fallen-score-tip">${TRICKS[parseInt(score)]}</div>
+          </div>
+          <div style="clear:both;"></div>
+        </div>`).join('') : '<div class="no-data">Keine häufigen Fallen-Scores</div>'}
+    </div>`;
+  container.appendChild(el);
+}
+
+function renderLearningCurve(key, container) {
+  const sorted = [...RAW]
+    .filter(m => (m.players||[]).some(p => (p.userId||p.name) === key))
+    .sort((a,b) => (a.finishedAt||'').localeCompare(b.finishedAt||''));
+  const avgs = sorted.map(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return null;
+    const turns = (match.games||[]).flatMap(g => (g.turns||[]).filter(t => t.playerId === me.id && !t.busted));
+    return turns.length ? turns.reduce((a,t)=>a+t.points,0)/turns.length : null;
+  }).filter(Boolean);
+  if (avgs.length < 2) return;
+
+  const sortedAvgs = [...avgs].sort((a,b)=>a-b);
+  const n20 = Math.max(1, Math.ceil(sortedAvgs.length*0.2));
+  const constAvg = sortedAvgs.slice(0,n20).reduce((a,b)=>a+b,0)/n20;
+  const bestAvg  = sortedAvgs.slice(-n20).reduce((a,b)=>a+b,0)/n20;
+  const overall  = avgs.reduce((a,b)=>a+b,0)/avgs.length;
+
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <div class="section-head" style="margin-top:28px;">LERNKURVE & AVG-ANALYSE</div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:20px;margin-bottom:20px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;text-align:center;">
+        <div><div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);">KONSTANTER AVG</div>
+          <div style="font-family:var(--font-head);font-size:26px;color:var(--red);">${constAvg.toFixed(1)}</div>
+          <div style="font-size:12px;color:var(--muted);">Schlechteste 20%</div></div>
+        <div><div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);">GESAMT-AVG</div>
+          <div style="font-family:var(--font-head);font-size:26px;color:var(--accent);">${overall.toFixed(1)}</div>
+          <div style="font-size:12px;color:var(--muted);">Alle Matches</div></div>
+        <div><div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);">BESTER AVG</div>
+          <div style="font-family:var(--font-head);font-size:26px;color:var(--green);">${bestAvg.toFixed(1)}</div>
+          <div style="font-size:12px;color:var(--muted);">Beste 20%</div></div>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:4px;">AVG-VERLAUF</div>
+      <canvas id="learning-chart" height="90" style="width:100%;display:block;"></canvas>
+    </div>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    const c = document.getElementById('learning-chart');
+    if (!c) return;
+    c.width = c.parentElement.getBoundingClientRect().width - 40;
+    drawLine('learning-chart', sorted.map(m=>m.finishedAt?.slice(0,10)||''), avgs.map(v=>+v.toFixed(1)), 'var(--accent)', 'Avg');
+  }, 100);
+}
+
+const CHECKOUT_ROUTES = {
+  2:'D1',3:'S1 D1',4:'D2',5:'S1 D2',6:'D3',7:'S3 D2',8:'D4',9:'S1 D4',10:'D5',
+  11:'S3 D4',12:'D6',13:'S5 D4',14:'D7',15:'S7 D4',16:'D8',17:'S1 D8',18:'D9',
+  19:'S3 D8',20:'D10',21:'S5 D8',22:'D11',23:'S7 D8',24:'D12',25:'S9 D8',
+  26:'D13',27:'S3 D12',28:'D14',29:'S1 D14',30:'D15',31:'S7 D12',32:'D16',
+  33:'S1 D16',34:'D17',35:'S3 D16',36:'D18',37:'S5 D16',38:'D19',39:'S7 D16',
+  40:'D20',41:'S9 D16',42:'D21',43:'S3 D20',44:'D22',45:'S5 D20',46:'D23',
+  47:'S7 D20',48:'D24',49:'S9 D20',50:'D25',51:'S11 D20',52:'D26',53:'S13 D20',
+  54:'D27',55:'S15 D20',56:'T16 D4',57:'S17 D20',58:'D29',59:'S19 D20',
+  60:'S20 D20',61:'T15 D8',62:'T10 D16',63:'T13 D12',64:'T16 D8',65:'T19 D4',
+  66:'T10 D18',67:'T17 D8',68:'T20 D4',69:'T19 D6',70:'T18 D8',71:'T13 D16',
+  72:'T16 D12',73:'T19 D8',74:'T14 D16',75:'T17 D12',76:'T20 D8',77:'T19 D10',
+  78:'T18 D12',79:'T13 D20',80:'T20 D10',81:'T19 D12',82:'T14 D20',83:'T17 D16',
+  84:'T20 D12',85:'T15 D20',86:'T18 D16',87:'T17 D18',88:'T20 D14',89:'T19 D16',
+  90:'T20 D15',91:'T17 D20',92:'T20 D16',93:'T19 D18',94:'T18 D20',95:'T19 D19',
+  96:'T20 D18',97:'T19 D20',98:'T20 D19',99:'T19 D21',100:'T20 D20',
+  101:'T17 D25',102:'T18 D24',103:'T19 D23',104:'T18 D25',105:'T20 D22',
+  106:'T20 D23',107:'T19 D25',108:'T20 D24',109:'T20 D25',110:'T20 D25',
+  120:'T20 S20 D20',121:'T17 T20 D7',122:'T18 T18 D14',130:'T20 T20 D10',
+  140:'T20 T20 D10',150:'T20 T20 D15',160:'T20 T20 D20',170:'T20 T20 D25',
+};
+
+function renderCheckoutTrainer(key, container) {
+  const scoreStats = {};
+  RAW.forEach(match => {
+    const me = (match.players||[]).find(p => (p.userId||p.name) === key);
+    if (!me) return;
+    (match.games||[]).forEach(game => {
+      (game.turns||[]).forEach(turn => {
+        if (turn.playerId !== me.id) return;
+        const sb = turn.score + turn.points;
+        if (sb >= 2 && sb <= 170) {
+          if (!scoreStats[sb]) scoreStats[sb] = {seen:0,checkout:0};
+          scoreStats[sb].seen++;
+          if (turn.score === 0) scoreStats[sb].checkout++;
+        }
+      });
+    });
+  });
+
+  const rows = Object.entries(CHECKOUT_ROUTES).sort((a,b)=>parseInt(a)-parseInt(b)).map(([score,route]) => {
+    const s = scoreStats[parseInt(score)];
+    const pct   = s && s.seen > 0 ? (s.checkout/s.seen*100).toFixed(0)+'%' : '—';
+    const color = s && s.seen > 0
+      ? s.checkout/s.seen>=0.5?'var(--green)':s.checkout/s.seen>=0.2?'var(--yellow)':'var(--red)'
+      : 'var(--muted)';
+    return `<tr><td style="font-family:var(--font-head);font-size:15px;color:var(--accent);">${score}</td>
+      <td style="font-family:var(--font-mono);font-size:13px;">${route}</td>
+      <td style="color:${color};font-weight:bold;">${pct}</td>
+      <td style="color:var(--muted);font-size:12px;">${s?s.seen+'×':''}</td></tr>`;
+  }).join('');
+
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <div class="section-head" style="margin-top:28px;">CHECKOUT-TRAINER (optimale Wege)</div>
+    <div style="overflow-x:auto;max-height:420px;overflow-y:auto;margin-bottom:20px;border:1px solid var(--border);border-radius:4px;">
+      <table class="checkout-trainer-table">
+        <thead style="position:sticky;top:0;background:var(--bg1);z-index:1;">
+          <tr>
+            <th style="padding:8px 10px;text-align:left;font-family:var(--font-mono);font-size:12px;border-bottom:2px solid var(--border);">SCORE</th>
+            <th style="padding:8px 10px;text-align:left;font-family:var(--font-mono);font-size:12px;border-bottom:2px solid var(--border);">OPTIMALER WEG</th>
+            <th style="padding:8px 10px;text-align:left;font-family:var(--font-mono);font-size:12px;border-bottom:2px solid var(--border);">DEINE QUOTE</th>
+            <th style="padding:8px 10px;text-align:left;font-family:var(--font-mono);font-size:12px;border-bottom:2px solid var(--border);">VERSUCHE</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  container.appendChild(el);
+}
 
 function renderOpponentsTab() {
   const key = selectedPlayer('op-player');
@@ -4005,8 +4656,87 @@ function renderCompareTab() {
 document.getElementById('cmp-player')?.addEventListener('change', renderCompareTab);
 
 // ═══════════════════════════════════════════════════════════════════════
-// SETTINGS / THEMES
+// AUTO-REFRESH + PDF EXPORT
 // ═══════════════════════════════════════════════════════════════════════
+
+let autoRefreshInterval = null;
+function toggleAutoRefresh() {
+  const btn = document.getElementById('autorefresh-btn');
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+    if (btn) btn.textContent = '🔄 AUTO';
+    if (btn) btn.style.color = '';
+  } else {
+    autoRefreshInterval = setInterval(() => {
+      syncFromSupabase();
+    }, 5 * 60 * 1000); // every 5 min
+    if (btn) btn.textContent = '🔄 AUTO ●';
+    if (btn) btn.style.color = 'var(--green)';
+    syncFromSupabase(); // immediate sync
+  }
+}
+
+function exportPDF() {
+  const key = selectedPlayer('ov-player');
+  const stats = getStatsFor(key);
+  if (!stats.length) return;
+
+  const wins   = stats.filter(s=>s.isWinner).length;
+  const avg    = (stats.reduce((a,s)=>a+s.avg3Dart,0)/stats.length).toFixed(2);
+  const f9     = (stats.reduce((a,s)=>a+s.first9Avg,0)/stats.length).toFixed(1);
+  const co     = (stats.reduce((a,s)=>a+s.checkoutPct,0)/stats.length).toFixed(1);
+  const effAtt = stats.reduce((a,s)=>a+s.effDoubleAttempts,0);
+  const effHit = stats.reduce((a,s)=>a+s.effDoubleHits,0);
+  const eff    = effAtt>0?(effHit/effAtt*100).toFixed(1):'0.0';
+  const date   = new Date().toLocaleDateString('de-DE');
+  const playerName = PLAYERS.find(p=>(p.id||p.name)===key)?.name || key;
+
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>Dart Report – ${playerName}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; color: #1a1a2e; }
+    h1 { font-size: 24px; color: #00b4d8; margin-bottom: 4px; }
+    .sub { color: #666; font-size: 13px; margin-bottom: 28px; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .kpi { border: 2px solid #00b4d8; border-radius: 8px; padding: 14px; text-align: center; }
+    .kpi-label { font-size: 11px; text-transform: uppercase; color: #666; letter-spacing: 1px; }
+    .kpi-value { font-size: 28px; font-weight: bold; color: #00b4d8; margin: 6px 0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th { background: #00b4d8; color: white; padding: 8px; text-align: left; font-size: 12px; }
+    td { padding: 7px 8px; border-bottom: 1px solid #eee; font-size: 12px; }
+    tr:nth-child(even) td { background: #f8f9fa; }
+    .footer { margin-top: 20px; font-size: 11px; color: #999; text-align: center; }
+  </style></head><body>
+  <h1>🎯 Dart-Statistik – ${playerName}</h1>
+  <div class="sub">Erstellt am ${date} · ${stats.length} Matches analysiert</div>
+  <div class="grid">
+    <div class="kpi"><div class="kpi-label">Matches</div><div class="kpi-value">${stats.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Win %</div><div class="kpi-value">${(wins/stats.length*100).toFixed(0)}%</div></div>
+    <div class="kpi"><div class="kpi-label">Average</div><div class="kpi-value">${avg}</div></div>
+    <div class="kpi"><div class="kpi-label">First-9</div><div class="kpi-value">${f9}</div></div>
+    <div class="kpi"><div class="kpi-label">Checkout %</div><div class="kpi-value">${co}%</div></div>
+    <div class="kpi"><div class="kpi-label">Eff. Doppel</div><div class="kpi-value">${eff}%</div></div>
+    <div class="kpi"><div class="kpi-label">180s</div><div class="kpi-value">${stats.reduce((a,s)=>a+s.turnsWith180,0)}</div></div>
+    <div class="kpi"><div class="kpi-label">Busts</div><div class="kpi-value">${stats.reduce((a,s)=>a+s.realBust,0)}</div></div>
+  </div>
+  <h2>Letzte 10 Matches</h2>
+  <table>
+    <tr><th>Datum</th><th>Gegner</th><th>Ergebnis</th><th>Avg</th><th>First-9</th><th>Checkout%</th></tr>
+    ${[...stats].reverse().slice(0,10).map(s=>`
+      <tr><td>${s.matchDate?.slice(0,10)||'—'}</td><td>${s.opponentName||'—'}</td>
+      <td>${s.legsWon}:${s.opponentLegs} ${s.isWinner?'✓':''}</td>
+      <td>${s.avg3Dart.toFixed(1)}</td><td>${s.first9Avg.toFixed(1)}</td>
+      <td>${s.checkoutPct.toFixed(1)}%</td></tr>`).join('')}
+  </table>
+  <div class="footer">Autodarts Dashboard · ${date}</div>
+  <scr`+'ipt>window.print();</scr'+'ipt></body></html>');
+  w.document.close();
+}
+
+// Show buttons after login
+const _origShowButtons = typeof showButtons === 'function' ? showButtons : null;
 
 const THEMES = {
   'Cyber Dark': {

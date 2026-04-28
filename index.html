@@ -1814,6 +1814,50 @@ function populateHmMatchSelect(playerKey) {
     }).join('');
 }
 
+// Segment center coordinates (normalized, same system as throw.coords)
+// Based on dartboard geometry: ring midpoints × sector angle midpoints
+function getSegmentCenter(segName, mult) {
+  if (!segName || segName === '?' || segName === 'M') return null;
+  if (segName === 'Bull') return {x:0, y:0};
+  if (segName === '25')   return {x:0, y:0.11};  // outer bull center
+
+  // Parse number from segment name (S20, D16, T19 etc.)
+  const num = parseInt(segName.slice(1));
+  if (isNaN(num) || num < 1 || num > 20) return null;
+
+  // Angle of this sector on the board
+  const HM_SECTORS_LOCAL = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+  const si  = HM_SECTORS_LOCAL.indexOf(num);
+  if (si < 0) return null;
+  const sliceAngle = (2 * Math.PI) / 20;
+  const offset     = -Math.PI/2 - sliceAngle/2;
+  const midAngle   = offset + si * sliceAngle + sliceAngle/2;
+
+  // Ring midpoint radii (normalized 0-1)
+  const ringMids = {
+    S: 0.325,   // single inner (avg of 0.162 and 0.487)
+    D: 0.537,   // triple (avg of 0.487 and 0.572) — wait D is outer
+    T: 0.530,   // triple midpoint
+    // actually: Single inner=0.162-0.487, Triple=0.487-0.572, Single outer=0.572-0.882, Double=0.882-1.0
+  };
+  let r;
+  if (mult === 2) r = 0.941;      // Double ring center
+  else if (mult === 3) r = 0.530; // Triple ring center
+  else r = mult === 1 && segName.startsWith('S') ? 0.325 : 0.727; // single inner vs outer
+  // Simple: use ring midpoints
+  if (mult === 2) r = (0.882 + 1.0) / 2;
+  else if (mult === 3) r = (0.487 + 0.572) / 2;
+  else {
+    // Single – could be inner or outer, use weighted average
+    r = (0.162 + 0.882) / 2 * 0.6; // bias toward inner single where most darts land
+  }
+
+  return {
+    x: r * Math.cos(midAngle),
+    y: r * Math.sin(midAngle),  // Note: in board coords, +y is UP (we'll flip in render)
+  };
+}
+
 function collectThrows(playerKey, matchIdx, segFilter) {
   const throws = [];
   const hits   = {};
@@ -1823,12 +1867,8 @@ function collectThrows(playerKey, matchIdx, segFilter) {
 
   matches.forEach(({m,i}) => {
     if (!m) return;
-    const pidToName = {};
-    const pidToKey  = {};
-    (m.players||[]).forEach(p => {
-      pidToName[p.id] = p.name;
-      pidToKey[p.id]  = p.userId || p.name;
-    });
+    const pidToKey = {};
+    (m.players||[]).forEach(p => { pidToKey[p.id] = p.userId || p.name; });
 
     (m.games||[]).forEach(game => {
       (game.turns||[]).forEach(turn => {
@@ -1837,13 +1877,31 @@ function collectThrows(playerKey, matchIdx, segFilter) {
           const seg  = t.segment?.name || '?';
           const mult = t.segment?.multiplier ?? 1;
           if (!t.coords) return;
-          const {x, y} = t.coords;
 
           // Apply segment filter
           if (segFilter !== 'all') {
             if (segFilter === 'D' && mult !== 2) return;
             if (segFilter === 'T' && mult !== 3) return;
             if (segFilter === 'S' && mult !== 1) return;
+          }
+
+          let {x, y} = t.coords;
+
+          // ── Blend coords with segment center ──────────────────────
+          // autodarts coords can be slightly off (wire bounce etc.)
+          // Blending anchors the point toward the correct field
+          // while keeping the exact measured position visible
+          if (mult > 0 && seg !== '?') {
+            const center = getSegmentCenter(seg, mult);
+            if (center) {
+              // Blend weight: 0.3 = 30% toward segment center, 70% raw coords
+              // For Double/Triple (precise rings) use more anchoring
+              const blend = mult >= 2 ? 0.35 : 0.2;
+              x = x * (1-blend) + center.x * blend;
+              // Board Y is inverted vs canvas: center.y is in board space (+y=up)
+              // coords.y is also +y=up in autodarts, so same space
+              y = y * (1-blend) + center.y * blend;
+            }
           }
 
           throws.push({ x, y, seg, mult, matchIdx: i, busted: turn.busted });

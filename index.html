@@ -1123,27 +1123,13 @@ function computePlayerStats(match) {
       if (pts >= 60)   s.turnsWith60plus  += 1;
 
       // ── Effektive Doppelquote: pro TURN (3 Darts) ────────────────
-      // 1 Turn auf Doppel = 1 Versuch (egal wie viele Darts im Turn)
+      // Versuch = Turn wo Score am Anfang gerade und ≤50 (Checkout möglich)
       // Treffer = Turn ausgecheckt (score === 0)
       const scoreBefore = turn.score + pts;
-      let runningEff = scoreBefore;
-      let turnHadDouble = false;
-      let turnCheckedOut = turn.score === 0 && !turn.busted;
+      const isCheckoutTurn = scoreBefore > 0 && scoreBefore <= 50 && scoreBefore % 2 === 0;
+      const turnCheckedOut = turn.score === 0 && !turn.busted;
 
-      (turn.throws || []).forEach(throwObj => {
-        const seg      = throwObj.segment || {};
-        const name     = seg.name || '';
-        const mult     = seg.multiplier ?? 1;
-        const throwPts = segScore(seg);
-        const isDbl    = (name.startsWith('D') || name === 'Bull') && mult > 0;
-        // Valider Versuch: Doppelwert muss EXAKT dem aktuellen Score entsprechen
-        const inRange  = runningEff > 0 && runningEff <= 50 && runningEff % 2 === 0 && throwPts === runningEff;
-        if (isDbl && inRange) turnHadDouble = true;
-        runningEff -= throwPts;
-        if (runningEff < 0) runningEff += throwPts;
-      });
-
-      if (turnHadDouble) {
+      if (isCheckoutTurn) {
         s.effDoubleAttempts += 1;
         if (turnCheckedOut) s.effDoubleHits += 1;
       }

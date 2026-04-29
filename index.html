@@ -1990,94 +1990,103 @@ function drawHmBoard(hits, mode) {
   const W=canvas.width, H=canvas.height;
   const {scale,ox,oy} = hmView;
   const cx = W/2+ox, cy = H/2+oy;
-  const R  = (W/2 - 6) * scale;
+  const R  = (Math.min(W,H)/2 - 8) * scale;
 
   ctx.clearRect(0,0,W,H);
 
-  // Dark background
-  ctx.fillStyle = '#111'; ctx.fillRect(0,0,W,H);
+  // ── Background ──────────────────────────────────────────────────────
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0,0,W,H);
 
-  // Outer metal rim
-  const rimGrad = ctx.createRadialGradient(cx,cy,R*0.96,cx,cy,R*1.05);
-  rimGrad.addColorStop(0,'#3a3a3a');
-  rimGrad.addColorStop(0.5,'#585858');
-  rimGrad.addColorStop(1,'#222');
-  ctx.beginPath(); ctx.arc(cx,cy,R*1.05,0,2*Math.PI);
-  ctx.fillStyle = rimGrad; ctx.fill();
+  // ── Outer wooden surround ────────────────────────────────────────────
+  const wood = ctx.createRadialGradient(cx,cy,R*0.98,cx,cy,R*1.12);
+  wood.addColorStop(0,   '#2a1a08');
+  wood.addColorStop(0.3, '#3d2510');
+  wood.addColorStop(0.7, '#2a1a08');
+  wood.addColorStop(1,   '#1a0d04');
+  ctx.beginPath(); ctx.arc(cx,cy,R*1.12,0,2*Math.PI);
+  ctx.fillStyle = wood; ctx.fill();
 
-  const COLORS = {
-    singleBlack: '#1c1c1c',
-    singleCream: '#c8a84a',
-    doubleRed:   '#aa1520',
-    doubleGreen: '#0d5424',
-    tripleRed:   '#aa1520',
-    tripleGreen: '#0d5424',
-    bull:        '#0d5424',
-    bullseye:    '#aa1520',
+  // ── Metal wire ring ──────────────────────────────────────────────────
+  ctx.beginPath(); ctx.arc(cx,cy,R*1.01,0,2*Math.PI);
+  ctx.strokeStyle = '#888'; ctx.lineWidth = R*0.012; ctx.stroke();
+
+  // ── Realistic board colors ────────────────────────────────────────────
+  const C = {
+    sBlack:  '#0f0f0f',
+    sCream:  '#ddd5a0',
+    dRed:    '#c01020',
+    dGreen:  '#0a5c28',
+    tRed:    '#c01020',
+    tGreen:  '#0a5c28',
+    bull:    '#0a5c28',
+    bullseye:'#c01020',
   };
 
   HM_SECTORS.forEach((num, si) => {
     const a0 = HM_OFFSET + si * HM_SLICE;
     const a1 = a0 + HM_SLICE;
-    const isEven = si % 2 === 0;
+    const even = si % 2 === 0;
 
     HM_RINGS.forEach(ring => {
       let color;
-      if      (ring.key === 'Bull')   color = COLORS.bullseye;
-      else if (ring.key === '25')     color = COLORS.bull;
-      else if (ring.key === 'Double') color = isEven ? COLORS.doubleRed  : COLORS.doubleGreen;
-      else if (ring.key === 'Triple') color = isEven ? COLORS.tripleRed  : COLORS.tripleGreen;
-      else                            color = isEven ? COLORS.singleBlack : COLORS.singleCream;
+      if      (ring.key==='Bull')   color = C.bullseye;
+      else if (ring.key==='25')     color = C.bull;
+      else if (ring.key==='Double') color = even ? C.dRed   : C.dGreen;
+      else if (ring.key==='Triple') color = even ? C.tRed   : C.tGreen;
+      else                          color = even ? C.sBlack : C.sCream;
 
+      ctx.beginPath();
       if (ring.bull) {
-        ctx.beginPath();
         ctx.arc(cx,cy,ring.r1*R,0,2*Math.PI);
-        if (ring.r0 > 0) { ctx.moveTo(cx,cy); ctx.arc(cx,cy,ring.r0*R,0,2*Math.PI,true); }
-        ctx.fillStyle = color; ctx.fill();
+        if (ring.r0>0) { ctx.moveTo(cx,cy); ctx.arc(cx,cy,ring.r0*R,0,2*Math.PI,true); }
       } else {
-        ctx.beginPath();
         ctx.arc(cx,cy,ring.r1*R,a0,a1);
         ctx.arc(cx,cy,ring.r0*R,a1,a0,true);
         ctx.closePath();
-        ctx.fillStyle = color; ctx.fill();
-        ctx.strokeStyle = 'rgba(160,160,160,0.18)'; ctx.lineWidth = 0.5; ctx.stroke();
       }
+      ctx.fillStyle = color;
+      ctx.fill();
     });
   });
 
-  // Wire ring borders
-  [0.162, 0.487, 0.572, 0.882, 1.0].forEach(rn => {
+  // ── Wire borders (rings) ─────────────────────────────────────────────
+  const wireColor = 'rgba(180,180,180,0.6)';
+  [0.055, 0.162, 0.487, 0.572, 0.882, 1.0].forEach(rn => {
     ctx.beginPath(); ctx.arc(cx,cy,rn*R,0,2*Math.PI);
-    ctx.strokeStyle = rn >= 0.88 ? 'rgba(210,210,210,0.55)' : 'rgba(180,180,180,0.28)';
-    ctx.lineWidth   = rn >= 0.88 ? 2.8 : 1.2;
+    ctx.strokeStyle = wireColor;
+    ctx.lineWidth   = rn >= 0.88 ? R*0.008 : rn >= 0.48 ? R*0.006 : R*0.004;
     ctx.stroke();
   });
 
-  // Sector spokes
-  for (let i = 0; i < 20; i++) {
+  // ── Wire spokes ──────────────────────────────────────────────────────
+  for (let i=0; i<20; i++) {
     const a = HM_OFFSET + i * HM_SLICE;
     ctx.beginPath();
     ctx.moveTo(cx + 0.162*R*Math.cos(a), cy + 0.162*R*Math.sin(a));
     ctx.lineTo(cx + R*Math.cos(a),       cy + R*Math.sin(a));
-    ctx.strokeStyle = 'rgba(170,170,170,0.22)'; ctx.lineWidth = 0.7; ctx.stroke();
+    ctx.strokeStyle = wireColor; ctx.lineWidth = R*0.004; ctx.stroke();
   }
 
-  // Numbers
+  // ── Numbers ──────────────────────────────────────────────────────────
   HM_SECTORS.forEach((num, si) => {
-    const midA = HM_OFFSET + si * HM_SLICE + HM_SLICE/2;
-    const lR   = R * 0.932;
-    const fs   = Math.max(9, Math.round(R * 0.072));
-    ctx.shadowColor = 'rgba(0,0,0,0.95)'; ctx.shadowBlur = 4;
-    ctx.fillStyle = '#f0e0c0';
-    ctx.font = `bold ${fs}px Arial,sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(num, cx + lR*Math.cos(midA), cy + lR*Math.sin(midA));
-    ctx.shadowBlur = 0;
+    const midA = HM_OFFSET + si*HM_SLICE + HM_SLICE/2;
+    const lR   = R * 1.065;
+    const fs   = Math.max(10, Math.round(R * 0.075));
+    ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=3;
+    ctx.fillStyle   = '#f5ead0';
+    ctx.font        = `bold ${fs}px Arial,sans-serif`;
+    ctx.textAlign   = 'center'; ctx.textBaseline='middle';
+    ctx.fillText(num, cx+lR*Math.cos(midA), cy+lR*Math.sin(midA));
+    ctx.shadowBlur=0;
   });
+
+  // ── Spider highlight (subtle) ────────────────────────────────────────
+  ctx.beginPath(); ctx.arc(cx,cy,0.055*R,0,2*Math.PI);
+  ctx.strokeStyle='rgba(220,220,220,0.8)'; ctx.lineWidth=R*0.006; ctx.stroke();
 
   updateZoomInfo();
 }
-
 
 // ── Dart points canvas ──────────────────────────────────────────────────
 function drawHmDarts(throws, mode) {
@@ -2087,32 +2096,27 @@ function drawHmDarts(throws, mode) {
   const W = canvas.width, H = canvas.height;
   const {scale, ox, oy} = hmView;
   const cx = W/2 + ox, cy = H/2 + oy;
-  const R  = (Math.min(W,H)/2 - 6) * scale;
+  const R  = (Math.min(W,H)/2 - 8) * scale;
 
   ctx.clearRect(0, 0, W, H);
   if (!throws.length) return;
 
-  const r = Math.max(3, 5 * scale);
+  const r = Math.max(1.5, 2.5 * (scale > 1 ? Math.sqrt(scale) : 1));
 
   throws.forEach(t => {
     const px = cx + t.x * R;
     const py = cy - t.y * R;
 
-    // Outer soft glow
-    const grad = ctx.createRadialGradient(px, py, 0, px, py, r * 3);
-    grad.addColorStop(0,   'rgba(255,120,30,0.5)');
-    grad.addColorStop(0.3, 'rgba(255,60,10,0.3)');
-    grad.addColorStop(1,   'rgba(255,30,0,0)');
-    ctx.beginPath(); ctx.arc(px, py, r * 3, 0, 2*Math.PI);
-    ctx.fillStyle = grad; ctx.fill();
+    // Subtle glow
+    ctx.shadowColor = 'rgba(180,220,255,0.8)';
+    ctx.shadowBlur  = r * 2.5;
 
-    // Hot core
-    const core = ctx.createRadialGradient(px, py, 0, px, py, r);
-    core.addColorStop(0,   'rgba(255,255,200,1)');
-    core.addColorStop(0.4, 'rgba(255,160,40,0.9)');
-    core.addColorStop(1,   'rgba(255,60,0,0)');
-    ctx.beginPath(); ctx.arc(px, py, r, 0, 2*Math.PI);
-    ctx.fillStyle = core; ctx.fill();
+    // Small filled dot
+    ctx.beginPath();
+    ctx.arc(px, py, r, 0, 2*Math.PI);
+    ctx.fillStyle = 'rgba(200,230,255,0.9)';
+    ctx.fill();
+    ctx.shadowBlur = 0;
   });
 }
 

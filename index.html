@@ -1136,7 +1136,8 @@ function computePlayerStats(match) {
         const mult     = seg.multiplier ?? 1;
         const throwPts = segScore(seg);
         const isDbl    = (name.startsWith('D') || name === 'Bull') && mult > 0;
-        const inRange  = runningEff > 0 && runningEff <= 50 && runningEff % 2 === 0;
+        // Valider Versuch: Doppelwert muss EXAKT dem aktuellen Score entsprechen
+        const inRange  = runningEff > 0 && runningEff <= 50 && runningEff % 2 === 0 && throwPts === runningEff;
         if (isDbl && inRange) turnHadDouble = true;
         runningEff -= throwPts;
         if (runningEff < 0) runningEff += throwPts;

@@ -2101,20 +2101,58 @@ function drawHmDarts(throws, mode) {
   ctx.clearRect(0, 0, W, H);
   if (!throws.length) return;
 
-  const r = Math.max(1.5, 2.5 * (scale > 1 ? Math.sqrt(scale) : 1));
+  // Convert throws to canvas positions
+  const pts = throws.map(t => ({
+    px: cx + t.x * R,
+    py: cy - t.y * R
+  }));
 
-  throws.forEach(t => {
-    const px = cx + t.x * R;
-    const py = cy - t.y * R;
+  // Calculate local density for each point
+  const densityRadius = R * 0.08;
+  const densities = pts.map((p, i) => {
+    let count = 0;
+    pts.forEach((q, j) => {
+      if (i === j) return;
+      const dx = p.px - q.px, dy = p.py - q.py;
+      if (Math.sqrt(dx*dx + dy*dy) < densityRadius) count++;
+    });
+    return count;
+  });
 
-    // Subtle glow
-    ctx.shadowColor = 'rgba(180,220,255,0.8)';
-    ctx.shadowBlur  = r * 2.5;
+  const maxDensity = Math.max(...densities, 1);
 
-    // Small filled dot
+  // Heatmap color scale: blue → cyan → green → yellow → orange → red
+  function heatColor(t) {
+    // t = 0..1
+    if (t < 0.2) {
+      const s = t/0.2;
+      return `rgba(${Math.round(50*s)},${Math.round(100+100*s)},${Math.round(200+55*s)},0.85)`;
+    } else if (t < 0.4) {
+      const s = (t-0.2)/0.2;
+      return `rgba(${Math.round(50-50*s)},${Math.round(200+55*s)},${Math.round(255-100*s)},0.9)`;
+    } else if (t < 0.6) {
+      const s = (t-0.4)/0.2;
+      return `rgba(${Math.round(150*s)},${Math.round(255)},${Math.round(155-155*s)},0.9)`;
+    } else if (t < 0.8) {
+      const s = (t-0.6)/0.2;
+      return `rgba(${Math.round(150+105*s)},${Math.round(255-100*s)},0,0.9)`;
+    } else {
+      const s = (t-0.8)/0.2;
+      return `rgba(255,${Math.round(155-155*s)},0,0.95)`;
+    }
+  }
+
+  const r = Math.max(2, 3 * (scale > 1 ? Math.sqrt(scale) : 1));
+
+  pts.forEach((p, i) => {
+    const t = densities[i] / maxDensity;
+    const color = heatColor(t);
+
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = r * 2;
     ctx.beginPath();
-    ctx.arc(px, py, r, 0, 2*Math.PI);
-    ctx.fillStyle = 'rgba(200,230,255,0.9)';
+    ctx.arc(p.px, p.py, r, 0, 2*Math.PI);
+    ctx.fillStyle = color;
     ctx.fill();
     ctx.shadowBlur = 0;
   });
